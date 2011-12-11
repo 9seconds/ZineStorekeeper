@@ -23,66 +23,86 @@
 #
 
 
+
 import itertools
 
 import website
 
 
+
 class P4Reviews (website.Site):
 
-    def __init__ (self, output = None):
-        csv_header = ('Artist', 'Album', 'Label', 'Year', 'Author', 'Score', 'Url')
-        super(P4Reviews, self).__init__('pitchfork.com', '/reviews/albums/{0}', output = output, csv_header = csv_header)
 
     @staticmethod
     @website.stripped
     def get_artist (info):
-        return info.find('h1').find('a').text if len(info.find('h1')) > 0 else info.find('h1').text
+        return info.find('h1').find('a').text \
+            if len(info.find('h1')) > 0 \
+            else info.find('h1').text
+
 
     @staticmethod
     @website.stripped
     def get_album (info):
         return info.find('h2').text
 
+
     @staticmethod
     @website.stripped
     def get_label (info):
         return info.find('h3').text.split(';')[0]
+
 
     @staticmethod
     @website.stripped
     def get_year (info):
         return info.find('h3').text.split(';')[1]
 
+
     @staticmethod
     @website.stripped
     def get_author (info):
         return info.find('div')[0].text.replace('By', '').split(';')[0]
+
 
     @staticmethod
     @website.stripped
     def get_score (info):
         return info.findall('div')[1].findall('span')[0].text
 
+
+    def __init__ (self, output = None):
+        csv_header = ('Artist', 'Album', 'Label', 'Year', 'Author', 'Score', 'Url')
+        super(P4Reviews, self).__init__(
+            'pitchfork.com',
+            '/reviews/albums/{0}',
+            output     = output,
+            csv_header = csv_header
+        )
+
+
     def get_content_handler (self, results):
         @website.ContentHandler.Method
         def method (url):
-            page = self.get_page_content(url)
-
-            doc = self.get_parser(page)
-            info = doc.cssselect('.review-tombstone .review-info')[0]
+            info = self.get_parser(
+                self.get_page_content(url)
+            ).cssselect('.review-tombstone .review-info')[0]
 
             artist = self.get_artist(info)
-            album = self.get_album(info)
-            label = self.get_label(info)
-            year = self.get_year(info)
+            album  = self.get_album(info)
+            label  = self.get_label(info)
+            year   = self.get_year(info)
             author = self.get_author(info)
-            score = self.get_score(info)
+            score  = float(self.get_score(info))
 
             method.say(str((artist, album, label, year, author, score)))
             results.append((artist, album, label, year, author, score, url))
         return method
 
+
     def get_elements (self, document):
         els = (el.get('href') for el in document.cssselect('.review-item .review a'))
-        return itertools.imap(lambda el: self.construct_url(el), els)
+        return itertools.imap(
+            lambda el: self.construct_url(el),
+            els
+        )

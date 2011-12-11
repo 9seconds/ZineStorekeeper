@@ -49,55 +49,49 @@ def stripped (func):
 
 class Site (object):
 
-    def __init__ (self, domain, pagination, csv_header = None, pagination_start = 1, output = None):
-        self.domain = domain
-        self.pagination = pagination
-        self.page_counter = pagecounter.PageCounter(self.construct_url(pagination), pagination_start)
-        self.csv_header = csv_header
-        self.output_file = os.extsep.join((domain, 'csv')) \
-            if output is None else output
-
-        __metaclass__ = abc.ABCMeta
-
-    def construct_url (self, *parts):
-        return urlparse.urlunsplit(('http', self.domain, '/'.join(parts), '', ''))
-
-    def get_pagecount (self):
-        return self.page_counter.get_max_pagenumber()
 
     @staticmethod
     def get_page_content (url):
         with contextlib.closing(urllib2.urlopen(url)) as page:
             return page.read()
 
-    @abc.abstractmethod
-    def get_content_handler (self, results):
-        pass
-
-    @abc.abstractmethod
-    def get_elements (self, document):
-        pass
 
     @staticmethod
     def get_parser (content):
         return parser.document_fromstring(content)
 
-    def parse_linkpage (self, page_number):
-        page = self.page_counter.construct_url(page_number)
-        page_content = ''
-        try:
-            page_content = self.get_page_content(self.page_counter.construct_url(page_number))
-        except urllib2.HTTPError as e:
-            sys.stderr.write("Page '{0}' is unavailable [{1.code}]".format(page, e))
-            return
 
-        results = collections.deque()
-        handlers = wcp.Pool(self.get_content_handler(results))
-        for el in self.get_elements(self.get_parser(page_content)):
-            handlers.add(el)
-        handlers.process()
+    @abc.abstractmethod
+    def get_content_handler (self, results):
+        pass
 
-        return results
+
+    @abc.abstractmethod
+    def get_elements (self, document):
+        pass
+
+
+    def __init__ (
+        self,
+        domain,
+        pagination,
+        csv_header       = None,
+        pagination_start = 1,
+        output           = None
+    ):
+        self.domain = domain
+        self.pagination = pagination
+        self.page_counter = pagecounter.PageCounter(
+            self.construct_url(pagination),
+            pagination_start
+        )
+        self.csv_header = csv_header
+        self.output_file = os.extsep.join((domain, 'csv')) \
+            if output is None \
+            else output
+
+        __metaclass__ = abc.ABCMeta
+
 
     def handle (self):
         content_results = []
@@ -109,8 +103,12 @@ class Site (object):
         content_results.sort(key = lambda field: field[0])
         self.save(content_results)
 
+
     def save (self, content):
-        prepared = itertools.imap(lambda tupl: tuple(x.encode('utf-8') for x in tupl), content)
+        prepared = itertools.imap(
+            lambda tupl: tuple(unicode(x).encode('utf-8') for x in tupl),
+            content
+        )
 
         try:
             with open(self.output_file, 'wb') as output:
@@ -118,3 +116,35 @@ class Site (object):
         except IOError:
             sys.stder.write('Cannot handle with {0}'.format(self.output_file))
             sys.exit(1)
+
+
+    def parse_linkpage (self, page_number):
+        page = self.page_counter.construct_url(page_number)
+        page_content = ''
+        try:
+            page_content = self.get_page_content(
+                self.page_counter.construct_url(page_number)
+            )
+        except urllib2.HTTPError as e:
+            sys.stderr.write(
+                "Page '{0}' is unavailable [{1.code}]".format(page, e)
+            )
+            return
+
+        results = collections.deque()
+        handlers = wcp.Pool(self.get_content_handler(results))
+        for el in self.get_elements(self.get_parser(page_content)):
+            handlers.add(el)
+        handlers.process()
+
+        return results
+
+
+    def get_pagecount (self):
+        return self.page_counter.get_max_pagenumber()
+
+
+    def construct_url (self, *parts):
+        return urlparse.urlunsplit(
+            ('http', self.domain, '/'.join(parts), '', '')
+        )

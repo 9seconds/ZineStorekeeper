@@ -39,7 +39,6 @@ from Queue import Empty as EmptyError
 class Worker (threading.Thread):
 
 
-
     class Function (object):
 
         @staticmethod
@@ -59,7 +58,6 @@ class Worker (threading.Thread):
             return self._function(argument)
 
 
-
     class Method (Function):
 
         @staticmethod
@@ -70,7 +68,6 @@ class Worker (threading.Thread):
             super(self.__class__, self).__init__(function)
 
             self._function.say = self.say
-
 
 
     class Callback (Function):
@@ -88,13 +85,14 @@ class Worker (threading.Thread):
             return self._function
 
 
-
     _timeout = 0.001
+
 
     @staticmethod
     @Callback
     def default_callback (self):
         pass
+
 
     def __init__ (self, queue, method):
         self.queue  = queue
@@ -105,14 +103,6 @@ class Worker (threading.Thread):
         super(Worker, self).__init__()
         self.daemon = True
 
-    def _set_callback (self, callback):
-        if not isinstance (callback, Worker.Callback):
-            raise TypeError('Given function is not Callback applicable')
-        self._callback = callback.function
-
-    def stop (self):
-        self._stop.set()
-
     def run (self):
         while not self._stop.is_set():
             try:
@@ -122,11 +112,28 @@ class Worker (threading.Thread):
             except EmptyError:
                 pass
 
+
+    def stop (self):
+        self._stop.set()
+
+
+    def _set_callback (self, callback):
+        if not isinstance (callback, Worker.Callback):
+            raise TypeError('Given function is not Callback applicable')
+        self._callback = callback.function
+
+
     callback = property(None, _set_callback)
 
 
 
 class Pool:
+
+
+    @staticmethod
+    def _alert (message):
+        print str(message)
+
 
     def __init__ (
         self,
@@ -144,9 +151,23 @@ class Pool:
 
         self.worker_method.say = lambda message : self.messages.put(message)
 
+
+    def process (self):
+        workers = self._create_workers()
+        herald  = self._create_herald()
+
+        self._waiting()
+
+        workers.append(herald)
+        self._disband(workers)
+
+        gc.collect()
+
+
     def add (self, task):
         self.queue.put(task)
         return self
+
 
     def _create_workers (self):
         workers = collections.deque()
@@ -159,9 +180,6 @@ class Pool:
 
         return workers
 
-    @staticmethod
-    def _alert (message):
-        print str(message)
 
     def _create_herald (self):
         herald = Worker(self.messages, self._alert)
@@ -169,21 +187,12 @@ class Pool:
 
         return herald
 
+
     def _waiting (self):
         self.queue.join()
         self.messages.join()
 
+
     def _disband (self, workers):
         for worker in workers:
             worker.stop()
-
-    def process (self):
-        workers = self._create_workers()
-        herald  = self._create_herald()
-
-        self._waiting()
-
-        workers.append(herald)
-        self._disband(workers)
-
-        gc.collect()
