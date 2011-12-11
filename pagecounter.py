@@ -24,32 +24,33 @@
 
 
 
-import contextlib
 import math
-import urllib2
+
+import stableurlopen
 
 
 
 class PageCounter:
 
+
     def __init__ (self, url_template, left_bound = 1, naive_bound = 5):
         self.url_template = url_template
-        self.left_bound = left_bound
-        self.naive_bound = naive_bound
-        self.page_count = None
+        self.left_bound   = left_bound
+        self.naive_bound  = naive_bound
+        self.page_count   = None
 
-    def is_page_available (self, token):
-        try:
-            with contextlib.closing(urllib2.urlopen(self.construct_url(token))):
-                return True
-        except urllib2.HTTPError as e:
-            if e.code == 404:
-                return False
 
-            raise e
+    def get_max_pagenumber (self):
+        if not self.page_count is None:
+            return self.page_count
 
-    def construct_url (self, page_number):
-        return self.url_template.format(page_number)
+        for page_number in xrange(*self.get_naive_range()):
+            if not self.is_page_available(page_number):
+                self.page_count = page_number-1
+                break
+
+        return self.page_count
+
 
     def get_initial_right_bound (self):
         right_bound = self.left_bound + 2
@@ -61,6 +62,7 @@ class PageCounter:
             tries += 1
             right_bound = 1 + coef(tries)*right_bound
         return right_bound
+
 
     def get_naive_range (self):
         left_bound = self.left_bound
@@ -75,13 +77,14 @@ class PageCounter:
 
         return (left_bound, right_bound+1)
 
-    def get_max_pagenumber (self):
-        if not self.page_count is None:
-            return self.page_count
 
-        for page_number in xrange(*self.get_naive_range()):
-            if not self.is_page_available(page_number):
-                self.page_count = page_number-1
-                break
+    def is_page_available (self, token):
+        try:
+            with stableurlopen.urlopen(self.construct_url(token)):
+                return True
+        except stableurlopen.HTTP404:
+                return False
 
-        return self.page_count
+
+    def construct_url (self, page_number):
+        return self.url_template.format(page_number)

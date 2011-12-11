@@ -72,13 +72,14 @@ class P4Reviews (website.Site):
 
 
     def __init__ (self, output = None):
-        csv_header = ('Artist', 'Album', 'Label', 'Year', 'Author', 'Score', 'Url')
+        csv_header = ('URL', 'Artist', 'Album', 'Label', 'Year', 'Author', 'Score')
         super(P4Reviews, self).__init__(
             'pitchfork.com',
             '/reviews/albums/{0}',
             output     = output,
             csv_header = csv_header
         )
+        self.task_name = '{0} reviews'.format(self.domain)
 
 
     def get_content_handler (self, results):
@@ -95,8 +96,8 @@ class P4Reviews (website.Site):
             author = self.get_author(info)
             score  = float(self.get_score(info))
 
-            method.say(str((artist, album, label, year, author, score)))
-            results.append((artist, album, label, year, author, score, url))
+            #method.say(str((artist, album, label, year, author, score)))
+            results.append((url, artist, album, label, year, author, score))
         return method
 
 
