@@ -83,7 +83,7 @@ class PageCounter:
             with stableurlopen.urlopen(self.construct_url(token)):
                 return True
         except stableurlopen.HTTP404:
-                return False
+            return False
 
 
     def construct_url (self, page_number):
