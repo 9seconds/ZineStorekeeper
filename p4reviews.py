@@ -69,7 +69,7 @@ class P4Reviews (website.Site):
         def method (url):
             page = self.get_page_content(url)
 
-            doc = website.parser.document_fromstring(page)
+            doc = self.get_parser(page)
             info = doc.cssselect('.review-tombstone .review-info')[0]
 
             artist = self.get_artist(info)

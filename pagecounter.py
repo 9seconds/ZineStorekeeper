@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#       website.py
+#       pagecounter.py
 #
 #       Copyright 2011 Serge Arkhipov <serge@aerialsounds.org>
 #
@@ -66,7 +66,7 @@ class PageCounter:
         left_bound = self.left_bound
         right_bound = self.get_initial_right_bound()
 
-        while right_bound - left_bound > self.naive_bound:
+        while (right_bound - left_bound) > self.naive_bound:
             page_number = left_bound + (right_bound - left_bound) // 2
             if self.is_page_available(page_number):
                 left_bound = page_number

@@ -22,6 +22,8 @@
 #
 #
 
+
+import abc
 import sys
 import csv
 import contextlib
@@ -34,14 +36,15 @@ import itertools
 
 import workerconsumerpool as wcp
 from workerconsumerpool import Worker as ContentHandler
-
 import pagecounter
+
 
 
 def stripped (func):
     def handled (*args):
         return func(*args).strip()
     return handled
+
 
 
 class Site (object):
@@ -54,6 +57,8 @@ class Site (object):
         self.output_file = os.extsep.join((domain, 'csv')) \
             if output is None else output
 
+        __metaclass__ = abc.ABCMeta
+
     def construct_url (self, *parts):
         return urlparse.urlunsplit(('http', self.domain, '/'.join(parts), '', ''))
 
@@ -65,11 +70,17 @@ class Site (object):
         with contextlib.closing(urllib2.urlopen(url)) as page:
             return page.read()
 
+    @abc.abstractmethod
     def get_content_handler (self, results):
         pass
 
+    @abc.abstractmethod
     def get_elements (self, document):
         pass
+
+    @staticmethod
+    def get_parser (content):
+        return parser.document_fromstring(content)
 
     def parse_linkpage (self, page_number):
         page = self.page_counter.construct_url(page_number)
@@ -82,7 +93,7 @@ class Site (object):
 
         results = collections.deque()
         handlers = wcp.Pool(self.get_content_handler(results))
-        for el in self.get_elements(parser.document_fromstring(page_content)):
+        for el in self.get_elements(self.get_parser(page_content)):
             handlers.add(el)
         handlers.process()
 
