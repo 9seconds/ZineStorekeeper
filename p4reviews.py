@@ -85,8 +85,11 @@ class P4Reviews (website.Site):
     def get_content_handler (self, results):
         @website.ContentHandler.Method
         def method (url):
-            info = self.get_parser(
-                self.get_page_content(url)
+            content = self.get_page_content(url)
+            if content is None:
+                return None
+            info = website.parser(
+                content
             ).cssselect('.review-tombstone .review-info')[0]
 
             artist = self.get_artist(info)

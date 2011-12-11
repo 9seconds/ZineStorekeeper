@@ -30,8 +30,7 @@ import collections
 import time
 import gc
 
-from Queue import Queue
-from Queue import Empty as EmptyError
+from Queue import Queue, Empty as EmptyError
 
 
 
@@ -70,34 +69,12 @@ class Worker (threading.Thread):
             self._function.say = self.say
 
 
-    class Callback (Function):
-
-        def __init__ (self, function):
-            super(self.__class__, self).__init__(function)
-
-            if 'self' != function.func_code.co_varnames[0]:
-                raise TypeError('Given function is not Callback applicable')
-
-            self._function._callback = None
-
-        @property
-        def function (self):
-            return self._function
-
-
     _timeout = 0.001
-
-
-    @staticmethod
-    @Callback
-    def default_callback (self):
-        pass
 
 
     def __init__ (self, queue, method):
         self.queue  = queue
         self.method = method
-        self._callback = self.default_callback.function
         self._stop  = threading.Event()
 
         super(Worker, self).__init__()
@@ -107,7 +84,6 @@ class Worker (threading.Thread):
         while not self._stop.is_set():
             try:
                 self.method(self.queue.get(timeout=self._timeout))
-                self._callback(self)
                 self.queue.task_done()
             except EmptyError:
                 pass
@@ -115,15 +91,6 @@ class Worker (threading.Thread):
 
     def stop (self):
         self._stop.set()
-
-
-    def _set_callback (self, callback):
-        if not isinstance (callback, Worker.Callback):
-            raise TypeError('Given function is not Callback applicable')
-        self._callback = callback.function
-
-
-    callback = property(None, _set_callback)
 
 
 
@@ -138,12 +105,10 @@ class Pool:
     def __init__ (
         self,
         worker_method,
-        worker_callback = Worker.default_callback,
-        worker_count    = 4*multiprocessing.cpu_count()
+        worker_count = 4*multiprocessing.cpu_count()
     ):
         self.worker_count    = worker_count
         self.worker_method   = worker_method
-        self.worker_callback = worker_callback
         self.queue           = Queue()
         self.messages        = Queue()
 
@@ -174,7 +139,6 @@ class Pool:
 
         for i in xrange(self.worker_count):
             worker = Worker(self.queue, self.worker_method)
-            worker.callback = self.worker_callback
             workers.append(worker)
             worker.start()
 

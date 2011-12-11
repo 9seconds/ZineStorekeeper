@@ -80,8 +80,8 @@ class PageCounter:
 
     def is_page_available (self, token):
         try:
-            with stableurlopen.urlopen(self.construct_url(token)):
-                return True
+            stableurlopen.urlopen(self.construct_url(token)).close()
+            return True
         except stableurlopen.HTTP404:
             return False
 

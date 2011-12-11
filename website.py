@@ -28,17 +28,18 @@ import sys
 import csv
 import urlparse
 import urllib2
-import lxml.html as parser
+
 import os
 import collections
 import itertools
 import time
 
 import workerconsumerpool as wcp
-from workerconsumerpool import Worker as ContentHandler
 import pagecounter
 import stableurlopen
 
+from workerconsumerpool import Worker              as ContentHandler
+from lxml.html          import document_fromstring as parser
 
 
 def stripped (func):
@@ -53,13 +54,12 @@ class Site (object):
 
     @staticmethod
     def get_page_content (url):
-        with stableurlopen.urlopen(url) as page:
-            return page.read()
-
-
-    @staticmethod
-    def get_parser (content):
-        return parser.document_fromstring(content)
+        page = stableurlopen.urlopen(url)
+        if page is None:
+            return None
+        content = page.read()
+        page.close()
+        return content
 
 
     @abc.abstractmethod
@@ -99,13 +99,11 @@ class Site (object):
 
     def handle (self):
         content_results = []
-        if not self.csv_header is None:
+        if self.csv_header is not None:
             content_results.append(self.csv_header)
 
-        print '{0}: {1} pages to handle'.format(
-            self.task_name,
-            self._get_pagecount()
-        )
+        print 'Handling {0}'.format(self.task_name)
+        print '{0} pages to handle'.format(self._get_pagecount())
         for page in xrange(self.page_counter.left_bound, self._get_pagecount()):
             #        for page in xrange(1, 3):
             content_results.extend(self._parse_linkpage(page))
@@ -114,23 +112,10 @@ class Site (object):
         self._save(content_results)
 
 
-    def _save (self, content):
-        prepared = itertools.imap(
-            lambda tupl: tuple(unicode(x).encode('utf-8') for x in tupl),
-            content
-        )
-        try:
-            with open(self.output_file, 'wb') as output:
-                csv.writer(output).writerows(prepared)
-        except IOError:
-            sys.stder.write('Cannot handle with {0}'.format(self.output_file))
-            sys.exit(1)
-
-
     def _parse_linkpage (self, page_number):
         url = self.page_counter.construct_url(page_number)
 
-        print '    Handling {0} [{1:.2%}]'.format(
+        print '    {0} [{1:.2%}]'.format(
             url,
             self._get_percentage(page_number)
         )
@@ -144,11 +129,24 @@ class Site (object):
 
         results = collections.deque()
         handlers = wcp.Pool(self.get_content_handler(results))
-        for el in self.get_elements(self.get_parser(page)):
+        for el in self.get_elements(parser(page)):
             handlers.add(el)
         handlers.process()
 
         return results
+
+
+    def _save (self, content):
+        prepared = itertools.imap(
+            lambda tupl: tuple(unicode(x).encode('utf-8') for x in tupl),
+            content
+        )
+        try:
+            with open(self.output_file, 'wb') as output:
+                csv.writer(output).writerows(prepared)
+        except IOError:
+            sys.stder.write('Cannot handle with {0}'.format(self.output_file))
+            sys.exit(1)
 
 
     def _get_pagecount (self):

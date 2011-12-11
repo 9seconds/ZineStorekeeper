@@ -24,8 +24,8 @@
 
 
 
-import contextlib
-import random
+from random import expovariate as rnd
+
 import time
 import urllib2
 
@@ -49,13 +49,22 @@ class HTTP404 (urllib2.HTTPError):
 
 
 def urlopen (url):
-    for attempt in xrange(TRIES):
-        try:
-            return contextlib.closing(urllib2.urlopen(url))
-        except urllib2.HTTPError as e:
-            if e.code in TEMP_ERROR_CODES: # page is temporary unaccessible
-                time.sleep(MIN_TIME + random.expovariate(MEAN_TIME-MIN_TIME))
-            elif e.code == 404:
-                raise HTTP404
-            else:
-                raise e
+    try:
+        return urllib2.urlopen(url)
+    except urllib2.HTTPError as e:
+        if e.code == 404:
+            raise HTTP404
+        elif e.code not in TEMP_ERROR_CODES:
+            raise e
+        else: # first attemp to retrieve resource was failed
+            time.sleep(MIN_TIME + rnd(MEAN_TIME-MIN_TIME))
+            for attempt in xrange(TRIES-1):
+                try:
+                    return urllib2.urlopen(url)
+                except urllib2.HTTPError as e:
+                    if e.code in TEMP_ERROR_CODES:
+                        time.sleep(MIN_TIME + rnd(MEAN_TIME-MIN_TIME))
+                    elif e.code == 404:
+                        raise HTTP404
+                    else:
+                        raise e
