@@ -49,7 +49,7 @@ def urlopen (url):
         try:
             return contextlib.closing(urllib2.urlopen(url))
         except urllib2.HTTPError as e:
-            if e.code == 503: # page is temporary unaccessible
+            if 500 <= e.code <= 505 or e.code == 408: # page is temporary unaccessible
                 time.sleep(MIN_TIME + random.expovariate(MEAN_TIME-MIN_TIME))
             elif e.code == 404:
                 raise HTTP404

@@ -102,7 +102,10 @@ class Site (object):
         if not self.csv_header is None:
             content_results.append(self.csv_header)
 
-        print '{0}: {1} pages to handle'.format(self.task_name, self._get_pagecount())
+        print '{0}: {1} pages to handle'.format(
+            self.task_name,
+            self._get_pagecount()
+        )
         for page in xrange(self.page_counter.left_bound, self._get_pagecount()):
             #        for page in xrange(1, 3):
             content_results.extend(self._parse_linkpage(page))
