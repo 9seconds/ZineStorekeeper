@@ -31,9 +31,11 @@ import urllib2
 
 
 
-TRIES = 3
-MIN_TIME = .1
-MEAN_TIME = .5
+TRIES            = 3
+MIN_TIME         = .1
+MEAN_TIME        = .5
+TEMP_ERROR_CODES = (403, 408, 409, 415, 417,
+                    500, 501, 502, 503, 504, 507, 509)
 
 
 
@@ -49,7 +51,7 @@ def urlopen (url):
         try:
             return contextlib.closing(urllib2.urlopen(url))
         except urllib2.HTTPError as e:
-            if 500 <= e.code <= 505 or e.code == 408: # page is temporary unaccessible
+            if e.code in TEMP_ERROR_CODES: # page is temporary unaccessible
                 time.sleep(MIN_TIME + random.expovariate(MEAN_TIME-MIN_TIME))
             elif e.code == 404:
                 raise HTTP404
