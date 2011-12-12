@@ -97,8 +97,7 @@ class Site (object):
 
         print 'Handling {0}'.format(self.task_name)
         print '{0} pages to handle'.format(self._get_pagecount())
-        #for page in xrange(self.page_counter.left_bound, self._get_pagecount()+1):
-        for page in xrange(560, 600):
+        for page in xrange(self.page_counter.left_bound, self._get_pagecount()+1):
             content_results.extend(self._parse_linkpage(page))
             if page % 100 == 0: # make a cleaning every 100 pages
                 gc.collect()

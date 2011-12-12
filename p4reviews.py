@@ -93,5 +93,6 @@ class P4Reviews (website.Site):
 
         return (url, artist, album, label, year, author, score)
 
+
     def get_sorter (self, tupl):
         return tupl[1] + tupl[2]
