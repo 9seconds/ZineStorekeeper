@@ -24,10 +24,9 @@
 
 
 
-from random import expovariate as rnd
-
-import time
-import urllib2
+from random  import expovariate as rnd
+from time    import sleep
+from urllib2 import urlopen as liburlopen, HTTPError
 
 
 
@@ -41,7 +40,7 @@ TEMP_ERROR_CODES = frozenset((
 
 
 
-class HTTP404 (urllib2.HTTPError):
+class HTTP404 (HTTPError):
 
     def __init__ (self):
         self.code = 404
@@ -49,23 +48,23 @@ class HTTP404 (urllib2.HTTPError):
 
 
 def rndsleep (mean_time = MEAN_TIME, min_time = MIN_TIME):
-    time.sleep(MIN_TIME + rnd(MEAN_TIME-MIN_TIME))
+    sleep(MIN_TIME + rnd(MEAN_TIME-MIN_TIME))
 
 
 def urlopen (url):
     try:
-        return urllib2.urlopen(url)
-    except urllib2.HTTPError as e:
+        return liburlopen(url)
+    except HTTPError as e:
         if e.code == 404:
             raise HTTP404
         elif e.code not in TEMP_ERROR_CODES:
             raise e
         else: # first attemp to retrieve resource was failed
-            time.sleep(MIN_TIME + rnd(MEAN_TIME-MIN_TIME))
+            sleep(MIN_TIME + rnd(MEAN_TIME-MIN_TIME))
             for attempt in xrange(TRIES-1):
                 try:
-                    return urllib2.urlopen(url)
-                except urllib2.HTTPError as e:
+                    return liburlopen(url)
+                except HTTPError as e:
                     if e.code in TEMP_ERROR_CODES:
                         rndsleep()
                     elif e.code == 404:
