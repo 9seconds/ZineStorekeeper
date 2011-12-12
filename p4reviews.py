@@ -85,21 +85,24 @@ class P4Reviews (website.Site):
     def get_content_handler (self, results):
         @website.ContentHandler.Method
         def method (url):
-            content = self.get_page_content(url)
-            if content is None:
+            try:
+                content = self.get_page_content(url)
+                if content is None:
+                    raise Exception
+                info = website.parser(
+                    content
+                ).cssselect('.review-tombstone .review-info')[0]
+
+                artist = self.get_artist(info)
+                album  = self.get_album(info)
+                label  = self.get_label(info)
+                year   = self.get_year(info)
+                author = self.get_author(info)
+                score  = float(self.get_score(info))
+            except:
+                method.say('******** Problems with {0}. Please check'.format(url))
                 return None
-            info = website.parser(
-                content
-            ).cssselect('.review-tombstone .review-info')[0]
 
-            artist = self.get_artist(info)
-            album  = self.get_album(info)
-            label  = self.get_label(info)
-            year   = self.get_year(info)
-            author = self.get_author(info)
-            score  = float(self.get_score(info))
-
-            #method.say(str((artist, album, label, year, author, score)))
             results.append((url, artist, album, label, year, author, score))
         return method
 

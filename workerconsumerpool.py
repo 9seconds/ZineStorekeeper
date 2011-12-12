@@ -105,7 +105,7 @@ class Pool:
     def __init__ (
         self,
         worker_method,
-        worker_count = 4*multiprocessing.cpu_count()
+        worker_count = 6*multiprocessing.cpu_count()
     ):
         self.worker_count    = worker_count
         self.worker_method   = worker_method

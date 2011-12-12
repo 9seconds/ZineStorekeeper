@@ -104,8 +104,8 @@ class Site (object):
 
         print 'Handling {0}'.format(self.task_name)
         print '{0} pages to handle'.format(self._get_pagecount())
-        for page in xrange(self.page_counter.left_bound, self._get_pagecount()):
-            #        for page in xrange(1, 3):
+        #for page in xrange(self.page_counter.left_bound, self._get_pagecount()):
+        for page in xrange(560, 600):
             content_results.extend(self._parse_linkpage(page))
             time.sleep(1) # to avoid banning from a website side
         content_results.sort(key = lambda field: field[0])
