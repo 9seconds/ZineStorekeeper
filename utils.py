@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#       stableurlopen.py
+#       utils.py
 #
 #       Copyright 2011 Serge Arkhipov <serge@aerialsounds.org>
 #
@@ -48,6 +48,10 @@ class HTTP404 (urllib2.HTTPError):
 
 
 
+def rndsleep (mean_time = MEAN_TIME, min_time = MIN_TIME):
+    time.sleep(MIN_TIME + rnd(MEAN_TIME-MIN_TIME))
+
+
 def urlopen (url):
     try:
         return urllib2.urlopen(url)
@@ -63,7 +67,7 @@ def urlopen (url):
                     return urllib2.urlopen(url)
                 except urllib2.HTTPError as e:
                     if e.code in TEMP_ERROR_CODES:
-                        time.sleep(MIN_TIME + rnd(MEAN_TIME-MIN_TIME))
+                        rndsleep()
                     elif e.code == 404:
                         raise HTTP404
                     else:

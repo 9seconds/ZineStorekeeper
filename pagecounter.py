@@ -26,7 +26,7 @@
 
 import math
 
-import stableurlopen
+import utils
 
 
 
@@ -80,9 +80,9 @@ class PageCounter:
 
     def is_page_available (self, token):
         try:
-            stableurlopen.urlopen(self.construct_url(token)).close()
+            utils.urlopen(self.construct_url(token)).close()
             return True
-        except stableurlopen.HTTP404:
+        except utils.HTTP404:
             return False
 
 

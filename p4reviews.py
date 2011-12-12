@@ -24,8 +24,6 @@
 
 
 
-import itertools
-
 import website
 
 
@@ -56,7 +54,8 @@ class P4Reviews (website.Site):
     @staticmethod
     @website.stripped
     def get_year (info):
-        return info.find('h3').text.split(';')[1]
+        year = info.find('h3').text.split(';')[1]
+        return year.split('/')[1] if '/' in year else year
 
 
     @staticmethod
@@ -79,37 +78,20 @@ class P4Reviews (website.Site):
             output     = output,
             csv_header = csv_header
         )
-        self.task_name = '{0} reviews'.format(self.domain)
+        self.task_name    = '{0} reviews'.format(self.domain)
+        self.css_elements = '.review-item .review a'
+        self.css_content  = '.review-tombstone .review-info'
 
 
-    def get_content_handler (self, results):
-        @website.ContentHandler.Method
-        def method (url):
-            try:
-                content = self.get_page_content(url)
-                if content is None:
-                    raise Exception
-                info = website.parser(
-                    content
-                ).cssselect('.review-tombstone .review-info')[0]
+    def get_page_data (self, url, content):
+        artist = self.get_artist(content)
+        album  = self.get_album(content)
+        label  = self.get_label(content)
+        year   = self.get_year(content)
+        author = self.get_author(content)
+        score  = float(self.get_score(content))
 
-                artist = self.get_artist(info)
-                album  = self.get_album(info)
-                label  = self.get_label(info)
-                year   = self.get_year(info)
-                author = self.get_author(info)
-                score  = float(self.get_score(info))
-            except:
-                method.say('******** Problems with {0}. Please check'.format(url))
-                return None
+        return (url, artist, album, label, year, author, score)
 
-            results.append((url, artist, album, label, year, author, score))
-        return method
-
-
-    def get_elements (self, document):
-        els = (el.get('href') for el in document.cssselect('.review-item .review a'))
-        return itertools.imap(
-            lambda el: self.construct_url(el),
-            els
-        )
+    def get_sorter (self, tupl):
+        return tupl[1] + tupl[2]

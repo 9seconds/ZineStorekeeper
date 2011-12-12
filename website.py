@@ -28,18 +28,18 @@ import sys
 import csv
 import urlparse
 import urllib2
+import gc
 
 import os
 import collections
 import itertools
-import time
 
 import workerconsumerpool as wcp
 import pagecounter
-import stableurlopen
+import utils
 
-from workerconsumerpool import Worker              as ContentHandler
-from lxml.html          import document_fromstring as parser
+from lxml.html import document_fromstring as parser
+
 
 
 def stripped (func):
@@ -52,24 +52,19 @@ def stripped (func):
 class Site (object):
 
 
+    @abc.abstractmethod
+    def get_page_data (self, content):
+        pass
+
+
     @staticmethod
     def get_page_content (url):
-        page = stableurlopen.urlopen(url)
+        page = utils.urlopen(url)
         if page is None:
             return None
         content = page.read()
         page.close()
         return content
-
-
-    @abc.abstractmethod
-    def get_content_handler (self, results):
-        pass
-
-
-    @abc.abstractmethod
-    def get_elements (self, document):
-        pass
 
 
     def __init__ (
@@ -87,28 +82,32 @@ class Site (object):
             self.construct_url(pagination),
             pagination_start
         )
-        self.csv_header   = csv_header
-        self.output_file  = os.extsep.join((domain, 'csv')) \
+        self.csv_header  = csv_header
+        self.output_file = os.extsep.join((domain, 'csv')) \
             if output is None \
             else output
-        self.task_name    = domain
-        self.tries        = tries
+        self.task_name = domain
+        self.tries     = tries
 
         __metaclass__ = abc.ABCMeta
 
 
     def handle (self):
         content_results = []
-        if self.csv_header is not None:
-            content_results.append(self.csv_header)
 
         print 'Handling {0}'.format(self.task_name)
         print '{0} pages to handle'.format(self._get_pagecount())
-        #for page in xrange(self.page_counter.left_bound, self._get_pagecount()):
-        for page in xrange(560, 600):
+        #for page in xrange(self.page_counter.left_bound, self._get_pagecount()+1):
+        for page in xrange(560, 570):
             content_results.extend(self._parse_linkpage(page))
-            time.sleep(1) # to avoid banning from a website side
-        content_results.sort(key = lambda field: field[0])
+            if page % 100 == 0: # make a cleaning every 100 pages
+                gc.collect()
+            utils.rndsleep(1) # to avoid banning from a website side
+        content_results.sort(key = self.get_sorter)
+
+        if self.csv_header is not None:
+            content_results.insert(0, self.csv_header)
+
         self._save(content_results)
 
 
@@ -126,6 +125,9 @@ class Site (object):
                 "!!! Page '{0}' is unavailable [{1.code}]".format(page, e)
             )
             return
+        if page is None:
+            sys.stderr.write('*** Problems with {0}. Please check'.format(url))
+            return
 
         results = collections.deque()
         handlers = wcp.Pool(self.get_content_handler(results))
@@ -134,6 +136,32 @@ class Site (object):
         handlers.process()
 
         return results
+
+
+    def get_content_handler (self, results):
+        @wcp.Worker.Method
+        def method (url):
+            try:
+                content = self.get_page_content(url)
+                if content is None:
+                    raise Exception
+                data = self.get_page_data(
+                    url,
+                    parser(content).cssselect(self.css_content)[0]
+                )
+            except:
+                method.panic('*** Problems with {0}. Please check.'.format(url))
+                return None
+
+            results.append(data)
+        return method
+
+
+    def get_elements (self, document):
+        return itertools.imap(
+            lambda el: self.construct_url(el),
+            (el.get('href') for el in document.cssselect(self.css_elements))
+        )
 
 
     def _save (self, content):
@@ -147,6 +175,10 @@ class Site (object):
         except IOError:
             sys.stder.write('Cannot handle with {0}'.format(self.output_file))
             sys.exit(1)
+
+
+    def get_sorter (self, tupl):
+        return tupl[0]
 
 
     def _get_pagecount (self):

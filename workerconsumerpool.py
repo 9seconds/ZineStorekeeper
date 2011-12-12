@@ -28,10 +28,9 @@ import threading
 import multiprocessing
 import collections
 import time
-import gc
+import sys
 
 from Queue import Queue, Empty as EmptyError
-
 
 
 
@@ -63,10 +62,15 @@ class Worker (threading.Thread):
         def say (message):
             print str(message)
 
+        @staticmethod
+        def panic (message):
+            sys.stderr.write(str(message) + "\n")
+
         def __init__ (self, function):
             super(self.__class__, self).__init__(function)
 
-            self._function.say = self.say
+            self._function.say   = self.say
+            self._function.panic = self.panic
 
 
     _timeout = 0.001
@@ -125,8 +129,6 @@ class Pool:
 
         workers.append(herald)
         self._disband(workers)
-
-        gc.collect()
 
 
     def add (self, task):
