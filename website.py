@@ -98,9 +98,20 @@ class Site (object):
         print 'Handling {0}'.format(self.task_name)
         print '{0} pages to handle'.format(self._get_pagecount())
         for page in xrange(self.page_counter.left_bound, self._get_pagecount()+1):
-            content_results.extend(self._parse_linkpage(page))
+            parse_results = None
+            for attempt in xrange(self.tries):
+                parse_results = self._parse_linkpage(page)
+                if parse_results is not None:
+                    break
+            else:
+                sys.stder.write('Cannot handle with {0}'.format(self.output_file))
+                sys.exit(1)
+
+            content_results.extend(parse_results)
+
             if page % 100 == 0: # make a cleaning every 100 pages
                 gc.collect()
+
             utils.rndsleep(1) # to avoid banning from a website side
         content_results.sort(key = self.get_sorter)
 
