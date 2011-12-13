@@ -25,6 +25,7 @@
 
 from plugins import *
 
-#p4 = p4reviews.P4Reviews()
-p4 = p4news.P4News()
-p4.handle()
+h = [p4reviews.P4Reviews, p4news.P4News, disreviews.DISReviews]
+
+for p in h:
+    p().handle()

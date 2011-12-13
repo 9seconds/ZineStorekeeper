@@ -22,4 +22,7 @@
 #
 #
 
-__all__ = ('p4reviews', 'p4news')
+__all__ = (
+    'p4reviews', 'disreviews',
+    'p4news'
+)

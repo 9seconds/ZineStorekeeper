@@ -37,7 +37,7 @@ import pagecounter
 import utils
 
 from lxml.html import document_fromstring as parser
-
+from lxml.html import tostring            as parser_str
 
 
 def stripped (func):
@@ -255,7 +255,8 @@ class TwoStep (Generic):
                     url,
                     parser(content).cssselect(self.css_content)[0]
                 )
-            except:
+            except Exception as e:
+                print e
                 method.panic('*** Problems with {0}. Please check.'.format(url))
                 return None
 
