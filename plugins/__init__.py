@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#       main.py
+#       __init__.py
 #
 #       Copyright 2011 Serge Arkhipov <serge@aerialsounds.org>
 #
@@ -22,9 +22,4 @@
 #
 #
 
-
-from plugins import *
-
-#p4 = p4reviews.P4Reviews()
-p4 = p4news.P4News()
-p4.handle()
+__all__ = ('p4reviews', 'p4news')
