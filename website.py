@@ -189,7 +189,7 @@ class OneStep (Generic):
         tries            = 3,
         output           = None
     ):
-        super(TwoStep, self).__init__(
+        super(OneStep, self).__init__(
             domain,
             pagination,
             csv_header,
@@ -204,7 +204,7 @@ class OneStep (Generic):
         for el in self.get_elements(page):
             results.append(self.handle_element(el))
 
-        return result
+        return results
 
 
 

@@ -24,6 +24,8 @@
 
 
 import p4reviews
+import p4news
 
-p4 = p4reviews.P4Reviews()
+#p4 = p4reviews.P4Reviews()
+p4 = p4news.P4News()
 p4.handle()
