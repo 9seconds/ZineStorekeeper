@@ -24,6 +24,8 @@
 
 
 
+from datetime import datetime
+
 import website
 
 
@@ -65,13 +67,21 @@ class P4Reviews (website.TwoStep):
 
 
     @staticmethod
+    def get_pubdate (info):
+        return datetime.strptime(
+            info.find('div')[0].text.split(';')[1].strip(),
+            '%B %d, %Y'
+        ).strftime('%m/%d/%Y')
+
+
+    @staticmethod
     @website.stripped
     def get_score (info):
         return info.findall('div')[1].findall('span')[0].text
 
 
     def __init__ (self, output = None):
-        csv_header = ('URL', 'Artist', 'Album', 'Label', 'Year', 'Author', 'Score')
+        csv_header = ('URL', 'Artist', 'Album', 'Label', 'Year', 'Publication date', 'Author', 'Score')
         super(P4Reviews, self).__init__(
             'pitchfork.com',
             '/reviews/albums/{0}',
@@ -84,14 +94,15 @@ class P4Reviews (website.TwoStep):
 
 
     def get_page_data (self, url, content):
-        artist = self.get_artist(content)
-        album  = self.get_album(content)
-        label  = self.get_label(content)
-        year   = self.get_year(content)
-        author = self.get_author(content)
-        score  = float(self.get_score(content))
+        artist   = self.get_artist(content)
+        album    = self.get_album(content)
+        label    = self.get_label(content)
+        year     = self.get_year(content)
+        author   = self.get_author(content)
+        pub_date = self.get_pubdate(content)
+        score    = float(self.get_score(content))
 
-        return (url, artist, album, label, year, author, score)
+        return (url, artist, album, label, year, pub_date, author, score)
 
 
     def get_sorter (self, tupl):

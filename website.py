@@ -30,6 +30,7 @@ import urlparse
 import os
 import collections
 import itertools
+import locale
 
 import workerconsumerpool as wcp
 import pagecounter
@@ -76,6 +77,7 @@ class Generic (object):
         csv_header       = None,
         pagination_start = 1,
         tries            = 3,
+        loc              = 'en_US',
         output           = None
     ):
         self.domain       = domain
@@ -90,12 +92,15 @@ class Generic (object):
             else output
         self.task_name = domain
         self.tries     = tries
+        self.loc       = loc
 
         __metaclass__ = abc.ABCMeta
 
 
     def handle (self):
         content_results = []
+
+        locale.setlocale(locale.LC_ALL, self.loc)
 
         print 'Handling {0}'.format(self.task_name)
         print '{0} pages to handle'.format(self._get_pagecount())
@@ -119,6 +124,8 @@ class Generic (object):
             content_results.insert(0, self.csv_header)
 
         self._save(content_results)
+
+        locale.setlocale(locale.LC_ALL, 'C')
 
 
     def _parse_linkpage (self, page_number):
