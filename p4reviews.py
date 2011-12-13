@@ -28,7 +28,7 @@ import website
 
 
 
-class P4Reviews (website.Site):
+class P4Reviews (website.TwoStep):
 
 
     @staticmethod

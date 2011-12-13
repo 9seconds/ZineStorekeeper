@@ -27,9 +27,6 @@ import abc
 import sys
 import csv
 import urlparse
-import urllib2
-import gc
-
 import os
 import collections
 import itertools
@@ -49,11 +46,16 @@ def stripped (func):
 
 
 
-class Site (object):
+class Generic (object):
 
 
     @abc.abstractmethod
     def get_page_data (self, content):
+        pass
+
+
+    @abc.abstractmethod
+    def start_parse_linkpage (self, page):
         pass
 
 
@@ -97,7 +99,8 @@ class Site (object):
 
         print 'Handling {0}'.format(self.task_name)
         print '{0} pages to handle'.format(self._get_pagecount())
-        for page in xrange(self.page_counter.left_bound, self._get_pagecount()+1):
+        #for page in xrange(self.page_counter.left_bound, self._get_pagecount()+1):
+        for page in xrange(1,3):
             parse_results = None
             for attempt in xrange(self.tries):
                 parse_results = self._parse_linkpage(page)
@@ -108,9 +111,6 @@ class Site (object):
                 sys.exit(1)
 
             content_results.extend(parse_results)
-
-            if page % 100 == 0: # make a cleaning every 100 pages
-                gc.collect()
 
             utils.rndsleep(1) # to avoid banning from a website side
         content_results.sort(key = self.get_sorter)
@@ -126,11 +126,11 @@ class Site (object):
 
         print '    {0} [{1:.2%}]'.format(
             url,
-            self._get_percentage(page_number)
+            float(page_number) / self._get_pagecount()
         )
         try:
             page = self.get_page_content(url)
-        except urllib2.HTTPError as e:
+        except utils.HTTPError as e:
             sys.stderr.write(
                 "!!! Page '{0}' is unavailable [{1.code}]".format(page, e)
             )
@@ -139,9 +139,94 @@ class Site (object):
             sys.stderr.write('*** Problems with {0}. Please check'.format(url))
             return
 
+        return self.start_parse_linkpage(parser(page))
+
+
+    def _save (self, content):
+        prepared = itertools.imap(
+            lambda tupl: tuple(unicode(x).encode('utf-8') for x in tupl),
+            content
+        )
+        try:
+            with open(self.output_file, 'wb') as output:
+                csv.writer(output).writerows(prepared)
+        except IOError:
+            sys.stder.write('Cannot handle with {0}'.format(self.output_file))
+            sys.exit(1)
+
+
+    def get_sorter (self, tupl):
+        return tupl[0]
+
+
+    def _get_pagecount (self):
+        return self.page_counter.get_max_pagenumber()
+
+
+    def construct_url (self, *parts):
+        return urlparse.urlunsplit(
+            ('http', self.domain, '/'.join(parts), '', '')
+        )
+
+
+
+class OneStep (Generic):
+
+
+    def __init__ (
+        self,
+        domain,
+        pagination,
+        csv_header       = None,
+        pagination_start = 1,
+        tries            = 3,
+        output           = None
+    ):
+        super(TwoStep, self).__init__(
+            domain,
+            pagination,
+            csv_header,
+            pagination_start,
+            tries,
+            output
+        )
+
+
+    def start_parse_linkpage (self, page):
+        results = collections.deque()
+        for el in self.get_elements(page):
+            results.append(self.handle_element(el))
+
+        return result
+
+
+
+class TwoStep (Generic):
+
+
+    def __init__ (
+        self,
+        domain,
+        pagination,
+        csv_header       = None,
+        pagination_start = 1,
+        tries            = 3,
+        output           = None
+    ):
+        super(TwoStep, self).__init__(
+            domain,
+            pagination,
+            csv_header,
+            pagination_start,
+            tries,
+            output
+        )
+
+
+    def start_parse_linkpage (self, page):
         results = collections.deque()
         handlers = wcp.Pool(self.get_content_handler(results))
-        for el in self.get_elements(parser(page)):
+        for el in self.get_elements(page):
             handlers.add(el)
         handlers.process()
 
@@ -171,35 +256,4 @@ class Site (object):
         return itertools.imap(
             lambda el: self.construct_url(el),
             (el.get('href') for el in document.cssselect(self.css_elements))
-        )
-
-
-    def _save (self, content):
-        prepared = itertools.imap(
-            lambda tupl: tuple(unicode(x).encode('utf-8') for x in tupl),
-            content
-        )
-        try:
-            with open(self.output_file, 'wb') as output:
-                csv.writer(output).writerows(prepared)
-        except IOError:
-            sys.stder.write('Cannot handle with {0}'.format(self.output_file))
-            sys.exit(1)
-
-
-    def get_sorter (self, tupl):
-        return tupl[0]
-
-
-    def _get_pagecount (self):
-        return self.page_counter.get_max_pagenumber()
-
-
-    def _get_percentage (self, number):
-        return float(number) / self._get_pagecount()
-
-
-    def construct_url (self, *parts):
-        return urlparse.urlunsplit(
-            ('http', self.domain, '/'.join(parts), '', '')
         )
