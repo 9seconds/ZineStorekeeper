@@ -86,13 +86,11 @@ class Generic (object):
             self.construct_url(pagination),
             pagination_start
         )
-        self.csv_header  = csv_header
-        self.output_file = os.extsep.join((domain, 'csv')) \
-            if output is None \
-            else output
-        self.task_name = domain
-        self.tries     = tries
-        self.loc       = loc
+        self.csv_header = csv_header
+        self.output     = output
+        self.task_name  = domain
+        self.tries      = tries
+        self.loc        = loc
 
         __metaclass__ = abc.ABCMeta
 
@@ -155,11 +153,17 @@ class Generic (object):
             content
         )
         try:
-            with open(self.output_file, 'wb') as output:
+            with open(self._get_output_filename(), 'wb') as output:
                 csv.writer(output).writerows(prepared)
         except IOError:
             sys.stder.write('Cannot handle with {0}'.format(self.output_file))
             sys.exit(1)
+
+
+    def _get_output_filename (self):
+        return self.output \
+            if self.output is not None \
+            else os.extsep.join((self.task_name.replace(' ', '.'), 'csv'))
 
 
     def get_sorter (self, tupl):
