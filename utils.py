@@ -23,10 +23,10 @@
 #
 
 
-
-from random  import expovariate as rnd
-from time    import sleep
-from urllib2 import urlopen as liburlopen, HTTPError
+from datetime import datetime
+from random   import expovariate as rnd
+from time     import sleep
+from urllib2  import urlopen as liburlopen, HTTPError
 
 
 
@@ -46,6 +46,9 @@ class HTTP404 (HTTPError):
         self.code = 404
 
 
+def convert_date (dt, f, t):
+    return datetime.strptime(dt, f).strftime(t)
+
 
 def rndsleep (mean_time = MEAN_TIME, min_time = MIN_TIME):
     sleep(MIN_TIME + rnd(MEAN_TIME-MIN_TIME))
@@ -60,7 +63,7 @@ def urlopen (url):
         elif e.code not in TEMP_ERROR_CODES:
             raise e
         else: # first attemp to retrieve resource was failed
-            sleep(MIN_TIME + rnd(MEAN_TIME-MIN_TIME))
+            rndsleep()
             for attempt in xrange(TRIES-1):
                 try:
                     return liburlopen(url)

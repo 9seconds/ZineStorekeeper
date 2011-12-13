@@ -24,9 +24,8 @@
 
 
 
-from datetime import datetime
-
 import website
+import utils
 
 
 
@@ -68,10 +67,11 @@ class P4Reviews (website.TwoStep):
 
     @staticmethod
     def get_pubdate (info):
-        return datetime.strptime(
+        return utils.convert_date(
             info.find('div')[0].text.split(';')[1].strip(),
-            '%B %d, %Y'
-        ).strftime('%m/%d/%Y')
+            '%B %d, %Y',
+            '%m/%d/%Y'
+        )
 
 
     @staticmethod
