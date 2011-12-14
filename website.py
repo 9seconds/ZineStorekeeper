@@ -255,8 +255,7 @@ class TwoStep (Generic):
                     url,
                     parser(content).cssselect(self.css_content)[0]
                 )
-            except Exception as e:
-                print e
+            except:
                 method.panic('*** Problems with {0}. Please check.'.format(url))
                 return None
 

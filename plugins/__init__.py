@@ -24,5 +24,5 @@
 
 __all__ = (
     'p4reviews', 'disreviews',
-    'p4news'
+    'p4news',    'disnews'
 )

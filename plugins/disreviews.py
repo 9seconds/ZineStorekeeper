@@ -53,11 +53,8 @@ class DISReviews (website.TwoStep):
     @staticmethod
     def get_releasedate (info):
         return utils.convert_date(
-            website.parser_str(
-                info.cssselect('.hreview .release_header .release_details')[0]
-            ).split('</div>')[0].split('>')[-1]
+            info.cssselect('.hreview .release_header .release_details')[0].text_content().strip().split()[-1]
         )
-
 
     @staticmethod
     @website.stripped
@@ -67,7 +64,9 @@ class DISReviews (website.TwoStep):
 
     @staticmethod
     def get_pubdate (info):
-        return utils.convert_date(info.cssselect('.hreview .byline .date')[0].text)
+        return utils.convert_date(
+            info.cssselect('.hreview .byline .date')[0].text
+        )
 
 
     @staticmethod
