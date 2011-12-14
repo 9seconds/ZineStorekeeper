@@ -23,6 +23,9 @@
 #
 
 __all__ = (
-    'p4reviews', 'disreviews',
-    'p4news',    'disnews'
+    'p4reviews',
+    'disreviews',
+    'p4news',
+    'disnews',
+    'gorillavsbearnews'
 )

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#       p4news.py
+#       gorillavsbearnews.py
 #
 #       Copyright 2011 Serge Arkhipov <serge@aerialsounds.org>
 #
@@ -29,37 +29,39 @@ import utils
 
 
 
-class P4News (website.OneStep):
+class GorillaVsBearNews (website.OneStep):
 
 
     def get_url (self, el):
-        return self.construct_url(
-            el.find('h3').find('a').get('href')
-        )
+        return el.cssselect('.postInfo h2 a')[0].get('href')
 
 
     @staticmethod
     @website.stripped
     def get_title (el):
-        return el.find('h3').find('a').text
+        return el.cssselect('.postInfo .pagetitle')[0].text_content()
 
 
     @staticmethod
     @website.stripped
     def get_author (el):
-        return el.find('div').text.split('on')[0].split('by ')[1]
+        return el.cssselect(
+            '.entry .postmetadataBottom'
+        )[0].text_content().strip().split()[2]
 
 
     @staticmethod
-    def get_pubdate (el):
-        return utils.convert_date(el.find('div').text.split('on')[1].split('at')[0])
+    def get_date (el):
+        return utils.convert_date(
+            el.cssselect('.postInfo .pageTitleR')[0].text_content()
+        )
 
 
     def __init__ (self, output = None):
-        csv_header = ('URL', 'Artist', 'Album', 'Label', 'Year', 'Publication date', 'Author', 'Score')
-        super(P4News, self).__init__(
-            'pitchfork.com',
-            '/news/{0}',
+        csv_header = ('URL', 'Title', 'Author', 'Date')
+        super(GorillaVsBearNews, self).__init__(
+            'gorillavsbear.net',
+            '/page/{0}',
             output     = output,
             csv_header = csv_header
         )
@@ -67,16 +69,16 @@ class P4News (website.OneStep):
 
 
     def get_elements (self, page):
-        return page.cssselect('.news-story .content .story-title')
+        return page.cssselect('#content .post')
 
 
     def handle_element(self, element):
-        url      = self.get_url(element)
-        title    = self.get_title(element)
-        author   = self.get_author(element)
-        pub_date = self.get_pubdate(element)
+        url    = self.get_url(element)
+        title  = self.get_title(element)
+        author = self.get_author(element)
+        date   = self.get_date(element)
 
-        return (url, title, author, pub_date)
+        return (url, title, author, date)
 
 
     def get_sorter (self, tupl):
