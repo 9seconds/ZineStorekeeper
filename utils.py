@@ -23,10 +23,10 @@
 #
 
 
-from datetime import datetime
-from random   import expovariate as rnd
-from time     import sleep
-from urllib2  import urlopen as liburlopen, HTTPError
+from dateutil.parser import parse as dateparse
+from random          import expovariate as rnd
+from time            import sleep
+from urllib2         import urlopen as liburlopen, HTTPError
 
 
 
@@ -46,8 +46,14 @@ class HTTP404 (HTTPError):
         self.code = 404
 
 
-def convert_date (dt, f, t):
-    return datetime.strptime(dt, f).strftime(t)
+def convert_date (dt, dayfirst = False, yearfirst = False, fuzzy = False):
+    return dateparse(
+        dt.strip(),
+        dayfirst  = dayfirst,
+        yearfirst = yearfirst,
+        fuzzy     = fuzzy,
+        ignoretz  = True
+    ).strftime('%m/%d/%Y')
 
 
 def rndsleep (mean_time = MEAN_TIME, min_time = MIN_TIME):

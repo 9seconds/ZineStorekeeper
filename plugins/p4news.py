@@ -52,11 +52,7 @@ class P4News (website.OneStep):
 
     @staticmethod
     def get_pubdate (el):
-        return utils.convert_date(
-            el.find('div').text.split('on')[1].split('at')[0].strip(),
-            '%B %d, %Y',
-            '%m/%d/%Y'
-        )
+        return utils.convert_date(el.find('div').text.split('on')[1].split('at')[0])
 
 
     def __init__ (self, output = None):

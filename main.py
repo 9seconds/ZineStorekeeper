@@ -22,6 +22,7 @@
 #
 #
 
+# check lxml and dateutil
 
 from plugins import *
 

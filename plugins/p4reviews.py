@@ -67,11 +67,7 @@ class P4Reviews (website.TwoStep):
 
     @staticmethod
     def get_pubdate (info):
-        return utils.convert_date(
-            info.find('div')[0].text.split(';')[1].strip(),
-            '%B %d, %Y',
-            '%m/%d/%Y'
-        )
+        return utils.convert_date(info.find('div')[0].text.split(';')[1])
 
 
     @staticmethod

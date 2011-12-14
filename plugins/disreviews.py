@@ -24,8 +24,6 @@
 
 
 
-import re
-
 import website
 import utils
 
@@ -57,9 +55,7 @@ class DISReviews (website.TwoStep):
         return utils.convert_date(
             website.parser_str(
                 info.cssselect('.hreview .release_header .release_details')[0]
-            ).split('</div>')[0].split('>')[-1].strip(),
-            '%d/%m/%Y',
-            '%m/%d/%Y'
+            ).split('</div>')[0].split('>')[-1]
         )
 
 
@@ -71,14 +67,7 @@ class DISReviews (website.TwoStep):
 
     @staticmethod
     def get_pubdate (info):
-        return utils.convert_date(
-            re.sub(
-                r'\w+, ',
-                '',
-                info.cssselect('.hreview .byline .date')[0].text.strip(), count = 1),
-            '%H:%M %B %Y',
-            '%m/%d/%Y'
-        )
+        return utils.convert_date(info.cssselect('.hreview .byline .date')[0].text)
 
 
     @staticmethod
