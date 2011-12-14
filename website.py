@@ -101,8 +101,8 @@ class Generic (object):
         locale.setlocale(locale.LC_ALL, self.loc)
 
         print 'Handling {0}'.format(self.task_name)
-        print '{0} pages to handle'.format(self._get_pagecount())
-        #for page in xrange(self.page_counter.left_bound, self._get_pagecount()+1):
+        print '{0} pages to handle'.format(self.get_pagecount())
+        #for page in xrange(self.page_counter.left_bound, self.get_pagecount()+1):
         for page in xrange(1,3):
             parse_results = None
             for attempt in xrange(self.tries):
@@ -131,7 +131,7 @@ class Generic (object):
 
         print '    {0} [{1:.2%}]'.format(
             url,
-            float(page_number) / self._get_pagecount()
+            float(page_number) / self.get_pagecount()
         )
         try:
             page = self.get_page_content(url)
@@ -170,7 +170,7 @@ class Generic (object):
         return tupl[0]
 
 
-    def _get_pagecount (self):
+    def get_pagecount (self):
         return self.page_counter.get_max_pagenumber()
 
 

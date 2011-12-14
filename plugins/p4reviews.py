@@ -71,9 +71,8 @@ class P4Reviews (website.TwoStep):
 
 
     @staticmethod
-    @website.stripped
     def get_score (info):
-        return info.findall('div')[1].findall('span')[0].text
+        return float(info.findall('div')[1].findall('span')[0].text.strip())
 
 
     def __init__ (self, output = None):
@@ -96,7 +95,7 @@ class P4Reviews (website.TwoStep):
         year     = self.get_year(content)
         author   = self.get_author(content)
         pub_date = self.get_pubdate(content)
-        score    = float(self.get_score(content))
+        score    = self.get_score(content)
 
         return (url, artist, album, label, year, pub_date, author, score)
 

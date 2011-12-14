@@ -71,13 +71,11 @@ class DISReviews (website.TwoStep):
 
 
     @staticmethod
-    @website.stripped
     def get_score (info):
-        try:
-            return info.cssselect('.ratings .mark .value')[0].text
-        except Exception as e:
-            print e
-            return ''
+        el = info.cssselect('.ratings .mark .value')
+        return int(el[0].text.strip()) \
+            if len(el) \
+            else ''
 
 
     def __init__ (self, output = None):
@@ -100,11 +98,11 @@ class DISReviews (website.TwoStep):
         release_date = self.get_releasedate(content)
         author       = self.get_author(content)
         pub_date     = self.get_pubdate(content)
-        score        = int(self.get_score(content))
+        score        = self.get_score(content)
 
         return (url, artist, album, label, release_date, pub_date, author, score)
 
-    def _get_pagecount (self):
+    def get_pagecount (self):
         handler    = utils.urlopen(self.page_counter.construct_url(1))
         pagination = website.parser(handler.read()).cssselect('#content .pagination a')
         handler.close()
