@@ -73,7 +73,11 @@ class DISReviews (website.TwoStep):
     @staticmethod
     @website.stripped
     def get_score (info):
-        return info.cssselect('.ratings .mark .value')[0].text
+        try:
+            return info.cssselect('.ratings .mark .value')[0].text
+        except Exception as e:
+            print e
+            return ''
 
 
     def __init__ (self, output = None):

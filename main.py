@@ -27,6 +27,6 @@
 from plugins import *
 
 h = [p4reviews.P4Reviews, p4news.P4News, disreviews.DISReviews]
-
+h = [ disreviews.DISReviews]
 for p in h:
     p().handle()
