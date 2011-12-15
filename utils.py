@@ -72,4 +72,4 @@ def urlopen (url):
             else:
                 raise e
         except URLError as e:
-            pass
+            rndsleep(MEAN_TIME*5)
