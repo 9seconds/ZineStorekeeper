@@ -77,7 +77,3 @@ class P4News (website.OneStep):
         pub_date = self.get_pubdate(element)
 
         return (url, title, author, pub_date)
-
-
-    def get_sorter (self, tupl):
-        return tupl[0]

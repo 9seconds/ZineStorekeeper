@@ -103,7 +103,7 @@ class Generic (object):
         print 'Handling {0}'.format(self.task_name)
         print '{0} pages to handle'.format(self.get_pagecount())
         #for page in xrange(self.page_counter.left_bound, self.get_pagecount()+1):
-        for page in xrange(1,3):
+        for page in xrange(180, 201):
             parse_results = None
             for attempt in xrange(self.tries):
                 parse_results = self._parse_linkpage(page)
@@ -255,7 +255,8 @@ class TwoStep (Generic):
                     url,
                     parser(content).cssselect(self.css_content)[0]
                 )
-            except:
+            except Exception as e:
+                print e
                 method.panic('*** Problems with {0}. Please check.'.format(url))
                 return None
 

@@ -35,7 +35,7 @@ class DISNews (website.TwoStep):
     @staticmethod
     @website.stripped
     def get_title (info):
-        return info.cssselect('.overlay h1 span')[0].text_content()
+        return info.cssselect('h1.title')[0].text_content()
 
 
     @staticmethod
@@ -60,7 +60,7 @@ class DISNews (website.TwoStep):
             csv_header = csv_header
         )
         self.task_name    = '{0} news'.format(self.domain)
-        self.css_elements = '.content .post .inner h4 a'
+        self.css_elements = '#content .post .inner h4 a'
         self.css_content  = '#content'
 
 
@@ -70,6 +70,7 @@ class DISNews (website.TwoStep):
         date   = self.get_date(content)
 
         return (url, title, author, date)
+
 
     def get_pagecount (self):
         handler    = utils.urlopen(self.page_counter.construct_url(1))
