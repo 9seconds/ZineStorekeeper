@@ -26,7 +26,7 @@
 from dateutil.parser import parse as dateparse
 from random          import expovariate as rnd
 from time            import sleep
-from urllib2         import urlopen as liburlopen, HTTPError
+from urllib2         import urlopen as liburlopen, HTTPError, URLError
 
 
 
@@ -61,22 +61,15 @@ def rndsleep (mean_time = MEAN_TIME, min_time = MIN_TIME):
 
 
 def urlopen (url):
-    try:
-        return liburlopen(url)
-    except HTTPError as e:
-        if e.code == 404:
-            raise HTTP404
-        elif e.code not in TEMP_ERROR_CODES:
-            raise e
-        else: # first attemp to retrieve resource was failed
-            rndsleep()
-            for attempt in xrange(TRIES-1):
-                try:
-                    return liburlopen(url)
-                except HTTPError as e:
-                    if e.code in TEMP_ERROR_CODES:
-                        rndsleep()
-                    elif e.code == 404:
-                        raise HTTP404
-                    else:
-                        raise e
+    for attempt in xrange(TRIES):
+        try:
+            return liburlopen(url)
+        except HTTPError as e:
+            if e.code == 404:
+                raise HTTP404
+            elif e.code in TEMP_ERROR_CODES:
+                rndsleep()
+            else:
+                raise e
+        except URLError as e:
+            pass

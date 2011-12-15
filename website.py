@@ -102,8 +102,7 @@ class Generic (object):
 
         print 'Handling {0}'.format(self.task_name)
         print '{0} pages to handle'.format(self.get_pagecount())
-        #for page in xrange(self.page_counter.left_bound, self.get_pagecount()+1):
-        for page in xrange(180, 201):
+        for page in xrange(self.page_counter.left_bound, self.get_pagecount()+1):
             parse_results = None
             for attempt in xrange(self.tries):
                 parse_results = self._parse_linkpage(page)
