@@ -27,6 +27,6 @@
 from plugins import *
 
 h = [disnews.DISNews, p4reviews.P4Reviews, p4news.P4News, disreviews.DISReviews, gorillavsbearnews.GorillaVsBearNews]
-#h = [disnews.DISNews]
+h = [p4news.P4News]
 for p in h:
     p().handle()

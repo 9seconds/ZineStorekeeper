@@ -53,7 +53,7 @@ def convert_date (dt, dayfirst = False, yearfirst = False, fuzzy = False):
         yearfirst = yearfirst,
         fuzzy     = fuzzy,
         ignoretz  = True
-    ).strftime('%m/%d/%Y')
+    ).strftime('%d.%m.%Y')
 
 
 def rndsleep (mean_time = MEAN_TIME, min_time = MIN_TIME):

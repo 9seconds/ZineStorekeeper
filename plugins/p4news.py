@@ -32,31 +32,43 @@ import utils
 class P4News (website.OneStep):
 
 
-    def get_url (self, el):
-        return self.construct_url(
-            el.find('h3').find('a').get('href')
+    @staticmethod
+    def get_titlelink (el):
+        return el.cssselect('h3.title a')[0]
+
+
+    @staticmethod
+    def get_posted (el):
+        content = el.cssselect('.posted-at')[0].text_content().strip().split()
+        return (
+            ' '.join(content[1:-7]),
+            ' '.join(content[-6:])
         )
 
 
     @staticmethod
     @website.stripped
     def get_title (el):
-        return el.find('h3').find('a').text
+        return P4News.get_titlelink(el).text_content()
 
 
     @staticmethod
     @website.stripped
     def get_author (el):
-        return el.find('div').text.split('on')[0].split('by ')[1]
+        return P4News.get_posted(el)[0]
 
 
     @staticmethod
     def get_pubdate (el):
-        return utils.convert_date(el.find('div').text.split('on')[1].split('at')[0])
+        return utils.convert_date(P4News.get_posted(el)[1])
+
+
+    def get_url (self, el):
+        return self.construct_url(P4News.get_titlelink(el).get('href'))
 
 
     def __init__ (self, output = None):
-        csv_header = ('URL', 'Artist', 'Album', 'Label', 'Year', 'Publication date', 'Author', 'Score')
+        csv_header = ('URL', 'Artist', 'Album', 'Date')
         super(P4News, self).__init__(
             'pitchfork.com',
             '/news/{0}',
@@ -67,13 +79,13 @@ class P4News (website.OneStep):
 
 
     def get_elements (self, page):
-        return page.cssselect('.news-story .content .story-title')
+        return page.cssselect('#news-list .news-story')
 
 
     def handle_element(self, element):
         url      = self.get_url(element)
         title    = self.get_title(element)
         author   = self.get_author(element)
-        pub_date = self.get_pubdate(element)
+        date = self.get_date(element)
 
-        return (url, title, author, pub_date)
+        return (url, title, author, date)
