@@ -41,13 +41,11 @@ class PageCounter:
 
 
     def get_max_pagenumber (self):
-        if not self.page_count is None:
-            return self.page_count
-
-        for page_number in xrange(*self.get_naive_range()):
-            if not self.is_page_available(page_number):
-                self.page_count = page_number-1
-                break
+        if self.page_count is None:
+            for page_number in xrange(*self.get_naive_range()):
+                if not self.is_page_available(page_number):
+                    self.page_count = page_number-1
+                    break
 
         return self.page_count
 
@@ -61,6 +59,7 @@ class PageCounter:
         while self.is_page_available(right_bound):
             tries += 1
             right_bound = 1 + coef(tries)*right_bound
+
         return right_bound
 
 
