@@ -79,7 +79,3 @@ class GorillaVsBearNews (website.OneStep):
         date   = self.get_date(element)
 
         return (url, title, author, date)
-
-
-    def get_sorter (self, tupl):
-        return tupl[0]

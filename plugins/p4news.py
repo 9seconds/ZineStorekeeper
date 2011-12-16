@@ -59,7 +59,7 @@ class P4News (website.OneStep):
 
 
     @staticmethod
-    def get_pubdate (el):
+    def get_date (el):
         return utils.convert_date(P4News.get_posted(el)[1])
 
 

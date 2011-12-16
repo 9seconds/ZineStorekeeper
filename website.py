@@ -51,6 +51,11 @@ class Generic (object):
 
 
     @abc.abstractmethod
+    def get_sorter (self, tupl):
+        pass
+
+
+    @abc.abstractmethod
     def get_page_data (self, content):
         pass
 
@@ -166,10 +171,6 @@ class Generic (object):
             else os.extsep.join((self.task_name.replace(' ', '.'), 'csv'))
 
 
-    def get_sorter (self, tupl):
-        return tupl[0]
-
-
     def get_pagecount (self):
         return self.page_counter.get_max_pagenumber()
 
@@ -209,6 +210,10 @@ class OneStep (Generic):
             results.append(self.handle_element(el))
 
         return results
+
+
+    def get_sorter (self, tupl):
+        return tupl[0]
 
 
 
@@ -269,3 +274,7 @@ class TwoStep (Generic):
             lambda el: self.construct_url(el),
             (el.get('href') for el in document.cssselect(self.css_elements))
         )
+
+
+    def get_sorter (self, tupl):
+        return tupl[1] + tupl[2]
