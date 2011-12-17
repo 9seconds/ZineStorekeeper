@@ -89,3 +89,7 @@ class P4News (website.OneStep):
         date = self.get_date(element)
 
         return (url, title, author, date)
+
+
+
+P4News.register()

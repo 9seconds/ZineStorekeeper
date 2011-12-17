@@ -102,3 +102,7 @@ class P4Reviews (website.TwoStep):
 
     def get_sorter (self, tupl):
         return tupl[1] + tupl[2]
+
+
+
+P4Reviews.register()

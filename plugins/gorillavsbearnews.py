@@ -79,3 +79,7 @@ class GorillaVsBearNews (website.OneStep):
         date   = self.get_date(element)
 
         return (url, title, author, date)
+
+
+
+GorillaVsBearNews.register()

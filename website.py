@@ -35,9 +35,10 @@ import locale
 import workerconsumerpool as wcp
 import pagecounter
 import utils
+import plugins
 
 from lxml.html import document_fromstring as parser
-from lxml.html import tostring            as parser_str
+
 
 
 def stripped (func):
@@ -75,6 +76,11 @@ class Generic (object):
         return content
 
 
+    @classmethod
+    def register (cls):
+        plugins.register(cls, cls.__name__.lower())
+
+
     def __init__ (
         self,
         domain,
@@ -107,8 +113,8 @@ class Generic (object):
 
         print 'Handling {0}'.format(self.task_name)
         print '{0} pages to handle'.format(self.get_pagecount())
-        #for page in xrange(self.page_counter.left_bound, self.get_pagecount()+1):
-        for page in xrange(self.page_counter.left_bound, 5):
+        for page in xrange(self.page_counter.left_bound, self.get_pagecount()+1):
+            #for page in xrange(self.page_counter.left_bound, 5):
             parse_results = None
             for attempt in xrange(self.tries):
                 parse_results = self._parse_linkpage(page)

@@ -22,11 +22,38 @@
 #
 #
 
-# check lxml and dateutil
+
+
+import sys
+
+def err (module_name, package_name):
+    sys.stderr.write(
+        "{0} module is unavaliable. Please install it\n(e.g. 'sudo apt-get install {1}')\n".format(
+            module_name,
+            package_name
+    ))
+    sys.exit(2)
+
+try:
+    import lxml
+except ImportError:
+    err('lxml', 'python-lxml')
+
+try:
+    import dateutil
+except ImportError:
+    err('dateutil', 'python-dateutil')
+
+
+
 
 from plugins import *
+import plugins
 
-h = [disnews.DISNews, p4reviews.P4Reviews, p4news.P4News, disreviews.DISReviews, gorillavsbearnews.GorillaVsBearNews]
-h = [p4news.P4News]
-for p in h:
-    p().handle()
+
+
+try:
+    for site in plugins.get_plugins(sys.argv[1:]):
+        site().handle()
+except ValueError as e:
+    print e

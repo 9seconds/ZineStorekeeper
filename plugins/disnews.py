@@ -77,3 +77,7 @@ class DISNews (website.TwoStep):
         pagination = website.parser(handler.read()).cssselect('#content .pagination a')
         handler.close()
         return int(pagination[-2].text)
+
+
+
+DISNews.register()
