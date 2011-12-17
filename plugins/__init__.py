@@ -34,7 +34,8 @@ __all__ = (
     'p4news',
     'disnews',
     'gorillavsbearnews',
-    'quietusnews'
+    'quietusnews',
+    'quietusreviews'
 )
 
 _plugins = {} # {plugin_name : plugin_class}
