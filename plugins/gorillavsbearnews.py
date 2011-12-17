@@ -24,12 +24,12 @@
 
 
 
-import website
-import utils
+from utils.website   import OneStep
+from utils.papercuts import convert_date, stripped
 
 
 
-class GorillaVsBearNews (website.OneStep):
+class GorillaVsBearNews (OneStep):
 
 
     def get_url (self, el):
@@ -37,13 +37,13 @@ class GorillaVsBearNews (website.OneStep):
 
 
     @staticmethod
-    @website.stripped
+    @stripped
     def get_title (el):
         return el.cssselect('.postInfo .pagetitle')[0].text_content()
 
 
     @staticmethod
-    @website.stripped
+    @stripped
     def get_author (el):
         return el.cssselect(
             '.entry .postmetadataBottom'
@@ -52,7 +52,7 @@ class GorillaVsBearNews (website.OneStep):
 
     @staticmethod
     def get_date (el):
-        return utils.convert_date(
+        return convert_date(
             el.cssselect('.postInfo .pageTitleR')[0].text_content()
         )
 

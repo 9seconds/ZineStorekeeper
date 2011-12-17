@@ -24,47 +24,47 @@
 
 
 
-import website
-import utils
+from utils.website   import TwoStep, parser
+from utils.papercuts import convert_date, stripped, urlopen
 
 
 
-class DISReviews (website.TwoStep):
+class DISReviews (TwoStep):
 
 
     @staticmethod
-    @website.stripped
+    @stripped
     def get_artist (info):
         return info.cssselect('.hreview .release_header .release_title h1 a')[0].text
 
 
     @staticmethod
-    @website.stripped
+    @stripped
     def get_album (info):
         return info.cssselect('.hreview .release_header .release_title h1 a')[1].text
 
 
     @staticmethod
-    @website.stripped
+    @stripped
     def get_label (info):
         return info.cssselect('.hreview .label_tokens .token a b')[0].text
 
 
     @staticmethod
     def get_releasedate (info):
-        return utils.convert_date(
+        return convert_date(
             info.cssselect('.hreview .release_header .release_details')[0].text_content().strip().split()[-1]
         )
 
     @staticmethod
-    @website.stripped
+    @stripped
     def get_author (info):
         return info.cssselect('.hreview .b_author .author')[0].text
 
 
     @staticmethod
     def get_pubdate (info):
-        return utils.convert_date(
+        return convert_date(
             info.cssselect('.hreview .byline .date')[0].text
         )
 
@@ -102,8 +102,8 @@ class DISReviews (website.TwoStep):
         return (url, artist, album, label, release_date, pub_date, author, score)
 
     def get_pagecount (self):
-        handler    = utils.urlopen(self.page_counter.construct_url(1))
-        pagination = website.parser(handler.read()).cssselect('#content .pagination a')
+        handler    = urlopen(self.page_counter.construct_url(1))
+        pagination = parser(handler.read()).cssselect('#content .pagination a')
         handler.close()
         return int(pagination[-2].text)
 

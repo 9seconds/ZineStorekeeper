@@ -24,12 +24,12 @@
 
 
 
-import website
-import utils
+from utils.website   import OneStep
+from utils.papercuts import convert_date, stripped
 
 
 
-class P4News (website.OneStep):
+class P4News (OneStep):
 
 
     @staticmethod
@@ -47,20 +47,20 @@ class P4News (website.OneStep):
 
 
     @staticmethod
-    @website.stripped
+    @stripped
     def get_title (el):
         return P4News.get_titlelink(el).text_content()
 
 
     @staticmethod
-    @website.stripped
+    @stripped
     def get_author (el):
         return P4News.get_posted(el)[0]
 
 
     @staticmethod
     def get_date (el):
-        return utils.convert_date(P4News.get_posted(el)[1])
+        return convert_date(P4News.get_posted(el)[1])
 
 
     def get_url (self, el):
@@ -83,10 +83,10 @@ class P4News (website.OneStep):
 
 
     def handle_element(self, element):
-        url      = self.get_url(element)
-        title    = self.get_title(element)
-        author   = self.get_author(element)
-        date = self.get_date(element)
+        url    = self.get_url(element)
+        title  = self.get_title(element)
+        author = self.get_author(element)
+        date   = self.get_date(element)
 
         return (url, title, author, date)
 

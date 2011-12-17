@@ -24,29 +24,29 @@
 
 
 
-import website
-import utils
+from utils.website   import TwoStep, parser
+from utils.papercuts import convert_date, stripped, urlopen
 
 
 
-class DISNews (website.TwoStep):
+class DISNews (TwoStep):
 
 
     @staticmethod
-    @website.stripped
+    @stripped
     def get_title (info):
         return info.cssselect('h1.title')[0].text_content()
 
 
     @staticmethod
-    @website.stripped
+    @stripped
     def get_author (info):
         return info.cssselect('.content .byline .b_author a.author')[0].text
 
 
     @staticmethod
     def get_date (info):
-        return utils.convert_date(
+        return convert_date(
             info.cssselect('.content .byline .date')[0].text
         )
 
@@ -73,8 +73,8 @@ class DISNews (website.TwoStep):
 
 
     def get_pagecount (self):
-        handler    = utils.urlopen(self.page_counter.construct_url(1))
-        pagination = website.parser(handler.read()).cssselect('#content .pagination a')
+        handler    = urlopen(self.page_counter.construct_url(1))
+        pagination = parser(handler.read()).cssselect('#content .pagination a')
         handler.close()
         return int(pagination[-2].text)
 

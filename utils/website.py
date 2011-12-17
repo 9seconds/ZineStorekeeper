@@ -23,6 +23,9 @@
 #
 
 
+import plugins
+
+
 import abc
 import sys
 import csv
@@ -32,19 +35,11 @@ import collections
 import itertools
 import locale
 
-import workerconsumerpool as wcp
-import pagecounter
-import utils
-import plugins
+from . import workerconsumerpool as wcp
+from . import pagecounter
+from . import papercuts
 
 from lxml.html import document_fromstring as parser
-
-
-
-def stripped (func):
-    def handled (*args):
-        return func(*args).strip()
-    return handled
 
 
 
@@ -68,7 +63,7 @@ class Generic (object):
 
     @staticmethod
     def get_page_content (url):
-        page = utils.urlopen(url)
+        page = papercuts.urlopen(url)
         if page is None:
             return None
         content = page.read()
@@ -113,8 +108,8 @@ class Generic (object):
 
         print 'Handling {0}'.format(self.task_name)
         print '{0} pages to handle'.format(self.get_pagecount())
-        for page in xrange(self.page_counter.left_bound, self.get_pagecount()+1):
-            #for page in xrange(self.page_counter.left_bound, 5):
+        #for page in xrange(self.page_counter.left_bound, self.get_pagecount()+1):
+        for page in xrange(self.page_counter.left_bound, 5):
             parse_results = None
             for attempt in xrange(self.tries):
                 parse_results = self._parse_linkpage(page)
@@ -126,7 +121,7 @@ class Generic (object):
 
             content_results.extend(parse_results)
 
-            utils.rndsleep(1) # to avoid banning from a website side
+            papercuts.rndsleep(1) # to avoid banning from a website side
         content_results.sort(key = self.get_sorter)
 
         if self.csv_header is not None:
@@ -146,7 +141,7 @@ class Generic (object):
         )
         try:
             page = self.get_page_content(url)
-        except utils.HTTPError as e:
+        except papercuts.HTTPError as e:
             sys.stderr.write(
                 "!!! Page '{0}' is unavailable [{1.code}]".format(page, e)
             )

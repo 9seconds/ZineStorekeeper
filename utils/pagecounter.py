@@ -26,7 +26,7 @@
 
 import math
 
-import utils
+from .papercuts import urlopen, HTTP404
 
 
 
@@ -52,19 +52,19 @@ class PageCounter:
 
     def get_initial_right_bound (self):
         right_bound = self.left_bound + 2
-        tries = 0
+        tries       = 0
 
         coef = lambda x : self.naive_bound * int( math.ceil(math.log1p(x)) )
 
         while self.is_page_available(right_bound):
-            tries += 1
-            right_bound = 1 + coef(tries)*right_bound
+            tries       += 1
+            right_bound  = 1 + coef(tries)*right_bound
 
         return right_bound
 
 
     def get_naive_range (self):
-        left_bound = self.left_bound
+        left_bound  = self.left_bound
         right_bound = self.get_initial_right_bound()
 
         while (right_bound - left_bound) > self.naive_bound:
@@ -79,9 +79,9 @@ class PageCounter:
 
     def is_page_available (self, token):
         try:
-            utils.urlopen(self.construct_url(token)).close()
+            urlopen(self.construct_url(token)).close()
             return True
-        except utils.HTTP404:
+        except HTTP404:
             return False
 
 

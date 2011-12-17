@@ -26,7 +26,6 @@
 
 import threading
 import multiprocessing
-import collections
 import time
 import sys
 
@@ -137,7 +136,7 @@ class Pool:
 
 
     def _create_workers (self):
-        workers = collections.deque()
+        workers = []
 
         for i in xrange(self.worker_count):
             worker = Worker(self.queue, self.worker_method)

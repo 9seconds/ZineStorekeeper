@@ -46,6 +46,13 @@ class HTTP404 (HTTPError):
         self.code = 404
 
 
+
+def stripped (func):
+    def handled (*args):
+        return func(*args).strip()
+    return handled
+
+
 def convert_date (dt, dayfirst = False, yearfirst = False, fuzzy = False):
     return dateparse(
         dt.strip(),
@@ -71,5 +78,5 @@ def urlopen (url):
                 rndsleep()
             else:
                 raise e
-        except URLError as e:
+        except URLError:
             rndsleep(MEAN_TIME*5)
