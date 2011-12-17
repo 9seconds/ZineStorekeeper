@@ -39,7 +39,7 @@ from . import workerconsumerpool as wcp
 from . import pagecounter
 from . import papercuts
 
-from lxml.html import document_fromstring as parser
+from lxml.html import document_fromstring as parser, tostring as parser_str
 
 
 
@@ -257,16 +257,15 @@ class TwoStep (Generic):
                 content = self.get_page_content(url)
                 if content is None:
                     raise Exception
-                data = self.get_page_data(
+                results.append(self.get_page_data(
                     url,
                     parser(content).cssselect(self.css_content)[0]
-                )
+                ))
             except Exception as e:
                 print e
                 method.panic('*** Problems with {0}. Please check.'.format(url))
                 return None
 
-            results.append(data)
         return method
 
 
