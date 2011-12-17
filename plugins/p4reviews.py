@@ -100,9 +100,5 @@ class P4Reviews (TwoStep):
         return (url, artist, album, label, year, date, author, score)
 
 
-    def get_sorter (self, tupl):
-        return tupl[1] + tupl[2]
-
-
 
 P4Reviews.register()

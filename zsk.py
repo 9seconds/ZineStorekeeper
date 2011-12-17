@@ -57,3 +57,6 @@ try:
         site().handle()
 except ValueError as e:
     print e
+    print 'You shoud run program with "all" key or with a subset of following keys:'
+    for name in sorted(plugins.__all__):
+        print '  - ' + name
