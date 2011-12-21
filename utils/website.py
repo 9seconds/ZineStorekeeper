@@ -25,18 +25,17 @@
 
 import plugins
 
-from lxml.html import document_fromstring as parser, tostring as parser_str
-from locale    import LC_ALL, setlocale
-from urlparse  import urlunsplit
-from itertools import imap
-from sys       import stderr, exit
-from csv       import writer as csvwriter
-from abc       import abstractmethod, ABCMeta as Abstract
-from os        import extsep
+from lxml.html   import document_fromstring as parser, tostring as parser_str
+from locale      import LC_ALL, setlocale
+from urlparse    import urlunsplit
+from itertools   import imap
+from sys         import stderr, exit
+from csv         import writer as csvwriter
+from abc         import abstractmethod, ABCMeta as Abstract
+from os          import extsep
+from collections import deque
 
-from . import workerconsumerpool as wcp
-from . import pagecounter
-
+from .          import workerconsumerpool as wcp, pagecounter, progress
 from .papercuts import urlopen, rndsleep, HTTPError
 
 
@@ -105,10 +104,12 @@ class Generic (object):
 
         setlocale(LC_ALL, self.loc)
 
-        print 'Handling {0}'.format(self.task_name)
-        print '{0} pages to handle'.format(self.get_pagecount())
         #for page in xrange(self.page_counter.left_bound, self.get_pagecount()+1):
-        for page in xrange(self.page_counter.left_bound, 3):
+        #for page in self.get_page_range(right_bound = 3):
+        work = self.get_progress(right_bound = 3)
+        for page in work:
+            work.set_dynamic(page)
+
             parse_results = None
             for attempt in xrange(self.tries):
                 parse_results = self._parse_linkpage(page)
@@ -134,19 +135,17 @@ class Generic (object):
     def _parse_linkpage (self, page_number):
         url = self.page_counter.construct_url(page_number)
 
-        print '    {0} [{1:.2%}]'.format(
-            url,
-            float(page_number) / self.get_pagecount()
-        )
         try:
             page = self.get_page_content(url)
         except HTTPError as e:
             stderr.write(
                 "!!! Page '{0}' is unavailable [{1.code}]".format(page, e)
             )
+
             return None
         if page is None:
             stderr.write('*** Problems with {0}. Please check'.format(url))
+
             return None
 
         return self.start_parse_linkpage(parser(page))
@@ -179,6 +178,21 @@ class Generic (object):
         return urlunsplit( ('http', self.domain, '/'.join(parts), '', '') )
 
 
+    def get_progress (self, left_bound = None, right_bound = None):
+        lb = left_bound  if left_bound is not None  else self.page_counter.left_bound
+        rb = right_bound if right_bound is not None else self.get_pagecount()
+
+        return progress.Progress(
+            self.get_progress_template(),
+            rb,
+            xrange(lb, rb+1)
+        )
+
+
+    def get_progress_template (self):
+        return self.task_name + ' : {dynamic} [{frac:.1%}] {fixedline}'
+
+
 
 class OneStep (Generic):
 
@@ -203,7 +217,7 @@ class OneStep (Generic):
 
 
     def start_parse_linkpage (self, page):
-        results = []
+        results = deque()
         for el in self.get_elements(page):
             results.append(self.handle_element(el))
 
@@ -238,7 +252,7 @@ class TwoStep (Generic):
 
 
     def start_parse_linkpage (self, page):
-        results = []
+        results  = deque()
         handlers = wcp.Pool(self.get_content_handler(results))
         for el in self.get_elements(page):
             handlers.add(el)
@@ -259,10 +273,8 @@ class TwoStep (Generic):
                     parser(content).cssselect(self.css_content)[0]
                 ))
             except Exception as e:
-                if __debug__:
-                    print '!!! ' + str(e)
-
                 method.panic('*** Problems with {0}. Please check.'.format(url))
+
                 return None
 
         return method

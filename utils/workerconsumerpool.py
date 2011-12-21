@@ -94,7 +94,6 @@ class Worker (Thread):
             except EmptyError:
                 pass
 
-
     def stop (self):
         self._stop.set()
 
