@@ -27,7 +27,7 @@
 from itertools       import imap, chain
 
 from utils.website   import TwoStep, parser, parser_str
-from utils.papercuts import convert_date, stripped, urlopen
+from utils.papercuts import convert_date, stripped, exceptionable, urlopen
 
 
 
@@ -35,6 +35,7 @@ class QuietusReviews (TwoStep):
 
 
     @staticmethod
+    @exceptionable
     def get_subline_content (info):
         parts = info.cssselect('h2 .sub_sub')[0].text_content().strip().split()
         return (
@@ -44,29 +45,34 @@ class QuietusReviews (TwoStep):
 
 
     @staticmethod
+    @exceptionable
     def get_review_urls (document, css):
         return ( el.find('a').get('href') for el in document.cssselect(css) )
 
 
     @staticmethod
     @stripped
+    @exceptionable
     def get_artist (info):
         return parser_str(info.find('h2')).split('<br>')[0].split('<h2>')[1]
 
 
     @staticmethod
     @stripped
+    @exceptionable
     def get_album (info):
         return info.cssselect('h2 .sub')[0].text_content()
 
 
     @staticmethod
     @stripped
+    @exceptionable
     def get_author (info):
         return QuietusReviews.get_subline_content(info)[0]
 
 
     @staticmethod
+    @exceptionable
     def get_date (info):
         return convert_date(
             QuietusReviews.get_subline_content(info)[1]

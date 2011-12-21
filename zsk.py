@@ -25,6 +25,8 @@
 
 
 import sys
+import gc
+
 
 def err (module_name, package_name):
     sys.stderr.write(
@@ -33,6 +35,7 @@ def err (module_name, package_name):
             package_name
     ))
     sys.exit(2)
+
 
 try:
     import lxml
@@ -54,6 +57,7 @@ import plugins
 
 try:
     for site in plugins.get_plugins(sys.argv[1:]):
+        gc.collect()
         site().handle()
 except ValueError as e:
     print e

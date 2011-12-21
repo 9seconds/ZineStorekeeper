@@ -27,7 +27,7 @@
 from decimal         import Decimal
 
 from utils.website   import TwoStep
-from utils.papercuts import convert_date, stripped
+from utils.papercuts import convert_date, stripped, exceptionable
 
 
 
@@ -35,34 +35,39 @@ class FactReviews (TwoStep):
 
 
     @staticmethod
+    @exceptionable
     def get_aa_line (info):
-        album = info.cssselect('.category-reviews h9 i')[0].text_content().strip()
+        album      = info.cssselect('.category-reviews h9 i')[0].text_content().strip()
         whole_line = info.cssselect('.category-reviews h9')[0].text_content()
-        artist = whole_line.replace(album, '').strip()
+        artist     = whole_line.replace(album, '').strip()
 
         return (artist[:-1], album)
 
 
     @staticmethod
     @stripped
+    @exceptionable
     def get_artist (info):
         return FactReviews.get_aa_line(info)[0]
 
 
     @staticmethod
     @stripped
+    @exceptionable
     def get_album (info):
         return FactReviews.get_aa_line(info)[1]
 
 
     @staticmethod
     @stripped
+    @exceptionable
     def get_label (info):
         ret = info.findall('p')[1].text_content().replace('Available on:', '').split()
         return ' '.join(ret[:-1])
 
 
     @staticmethod
+    @exceptionable
     def get_date (info):
         return convert_date(
             info.cssselect('#greyBox')[0].text_content().split(',')[1].split('and')[0]
@@ -71,11 +76,13 @@ class FactReviews (TwoStep):
 
     @staticmethod
     @stripped
+    @exceptionable
     def get_author (info):
         return info.findall('p')[-2].text_content()
 
 
     @staticmethod
+    @exceptionable
     def get_score (info):
         have = lambda pattern: len(
             info.cssselect( FactReviews.get_score_css(pattern) )
@@ -92,6 +99,7 @@ class FactReviews (TwoStep):
 
 
     @staticmethod
+    @exceptionable
     def get_score_css (number):
         css = str(number).replace('.', '')
         return 'table.record%s-article' % (css if not css.endswith('0') else css[:-1])

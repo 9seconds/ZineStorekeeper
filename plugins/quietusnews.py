@@ -25,7 +25,7 @@
 
 
 from utils.website   import TwoStep, parser, parser_str
-from utils.papercuts import convert_date, stripped, urlopen
+from utils.papercuts import convert_date, stripped, exceptionable, urlopen
 
 
 
@@ -33,6 +33,7 @@ class QuietusNews (TwoStep):
 
 
     @staticmethod
+    @exceptionable
     def get_subline_content (info):
         parts = info.cssselect('h2 .sub_sub')[0].text_content().strip().split()
         return (
@@ -43,17 +44,20 @@ class QuietusNews (TwoStep):
 
     @staticmethod
     @stripped
+    @exceptionable
     def get_title (info):
         return parser_str(info.find('h2')).split('<br>')[0].split('<h2>')[1]
 
 
     @staticmethod
     @stripped
+    @exceptionable
     def get_author (info):
         return QuietusNews.get_subline_content(info)[0]
 
 
     @staticmethod
+    @exceptionable
     def get_date (info):
         return convert_date(
             QuietusNews.get_subline_content(info)[1]
@@ -61,7 +65,6 @@ class QuietusNews (TwoStep):
 
 
     def __init__ (self, output = None):
-        #csv_header = ('URL', 'Title', 'Author', 'Date')
         csv_header = ('URL', 'Title', 'Date')
         super(QuietusNews, self).__init__(
             'thequietus.com',
@@ -75,11 +78,9 @@ class QuietusNews (TwoStep):
 
 
     def get_page_data (self, url, content):
-        title  = self.get_title(content)
-        #author = self.get_author(content)
-        date   = self.get_date(content)
+        title = self.get_title(content)
+        date  = self.get_date(content)
 
-        #return (url, title, author, date)
         return (url, title, date)
 
 

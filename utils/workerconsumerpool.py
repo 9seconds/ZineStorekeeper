@@ -24,16 +24,19 @@
 
 
 
-import threading
 import multiprocessing
-import time
-import sys
 
-from Queue import Queue, Empty as EmptyError
+from Queue     import Queue, Empty as EmptyError
+from sys       import stderr
+from time      import sleep
+from threading import Thread, Event as ThreadEvent
 
 
+CPU_COUNT    = multiprocessing.cpu_count()
+WORKER_COUNT = 6*CPU_COUNT
 
-class Worker (threading.Thread):
+
+class Worker (Thread):
 
 
     class Function (object):
@@ -63,7 +66,7 @@ class Worker (threading.Thread):
 
         @staticmethod
         def panic (message):
-            sys.stderr.write(str(message) + "\n")
+            stderr.write(str(message) + "\n")
 
         def __init__ (self, function):
             super(self.__class__, self).__init__(function)
@@ -78,7 +81,7 @@ class Worker (threading.Thread):
     def __init__ (self, queue, method):
         self.queue  = queue
         self.method = method
-        self._stop  = threading.Event()
+        self._stop  = ThreadEvent()
 
         super(Worker, self).__init__()
         self.daemon = True
@@ -108,14 +111,14 @@ class Pool:
     def __init__ (
         self,
         worker_method,
-        worker_count = 6*multiprocessing.cpu_count()
+        worker_count = WORKER_COUNT
     ):
         self.worker_count    = worker_count
         self.worker_method   = worker_method
         self.queue           = Queue()
         self.messages        = Queue()
 
-        time.sleep(.1) # dirty hack because Queue is not set stable
+        sleep(.1) # dirty hack because Queue is not set stable
 
         self.worker_method.say = lambda message : self.messages.put(message)
 

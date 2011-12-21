@@ -25,24 +25,27 @@
 
 
 from utils.website   import OneStep
-from utils.papercuts import convert_date, stripped
+from utils.papercuts import convert_date, stripped, exceptionable
 
 
 
 class FactNews (OneStep):
 
 
+    @exceptionable
     def get_url (self, el):
         return el.cssselect('a.archiveTitle')[0].get('href')
 
 
     @staticmethod
     @stripped
+    @exceptionable
     def get_title (el):
         return el.cssselect('h2')[0].text_content()
 
 
     @staticmethod
+    @exceptionable
     def get_date (el):
         return convert_date(
             el.cssselect('.postmetadata')[0].text_content().split('|')[0]

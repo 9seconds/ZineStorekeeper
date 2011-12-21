@@ -23,10 +23,12 @@
 #
 
 
+
 from dateutil.parser import parse as dateparse
 from random          import expovariate as rnd
 from time            import sleep
 from urllib2         import urlopen as liburlopen, HTTPError, URLError
+from sys             import stderr
 
 
 
@@ -47,10 +49,40 @@ class HTTP404 (HTTPError):
 
 
 
+##############
+# Decorators #
+##############
+
+
+
 def stripped (func):
     def handled (*args):
         return func(*args).strip()
+
     return handled
+
+
+def exceptionable (func):
+    def handled (*args):
+        try:
+            return func(*args)
+        except Exception as e:
+            if __debug__:
+                stderr.write('!!! There were the problem with {0} content handler.\n    Exception: {1}\n'.format(
+                    func.__name__,
+                    str(e)
+                ))
+            else:
+                return ''
+
+    return handled
+
+
+
+#############
+# Functions #
+#############
+
 
 
 def convert_date (dt, dayfirst = False, yearfirst = False, fuzzy = False):

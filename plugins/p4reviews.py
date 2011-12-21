@@ -24,8 +24,10 @@
 
 
 
+from decimal         import Decimal
+
 from utils.website   import TwoStep
-from utils.papercuts import convert_date, stripped
+from utils.papercuts import convert_date, stripped, exceptionable
 
 
 
@@ -34,6 +36,7 @@ class P4Reviews (TwoStep):
 
     @staticmethod
     @stripped
+    @exceptionable
     def get_artist (info):
         return info.find('h1').find('a').text \
             if len(info.find('h1')) > 0 \
@@ -42,18 +45,21 @@ class P4Reviews (TwoStep):
 
     @staticmethod
     @stripped
+    @exceptionable
     def get_album (info):
         return info.find('h2').text
 
 
     @staticmethod
     @stripped
+    @exceptionable
     def get_label (info):
         return info.find('h3').text.split(';')[0]
 
 
     @staticmethod
     @stripped
+    @exceptionable
     def get_year (info):
         year = info.find('h3').text.split(';')[1]
         return year.split('/')[1] if '/' in year else year
@@ -61,18 +67,21 @@ class P4Reviews (TwoStep):
 
     @staticmethod
     @stripped
+    @exceptionable
     def get_author (info):
         return info.find('div')[0].text.replace('By', '').split(';')[0]
 
 
     @staticmethod
+    @exceptionable
     def get_date (info):
         return convert_date(info.find('div')[0].text.split(';')[1])
 
 
     @staticmethod
+    @exceptionable
     def get_score (info):
-        return float(info.findall('div')[1].findall('span')[0].text.strip())
+        return Decimal(info.findall('div')[1].findall('span')[0].text.strip())
 
 
     def __init__ (self, output = None):

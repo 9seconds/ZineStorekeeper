@@ -25,7 +25,7 @@
 
 
 from utils.website   import TwoStep, parser
-from utils.papercuts import convert_date, stripped, urlopen
+from utils.papercuts import convert_date, stripped, exceptionable, urlopen
 
 
 
@@ -34,35 +34,42 @@ class DISReviews (TwoStep):
 
     @staticmethod
     @stripped
+    @exceptionable
     def get_artist (info):
         return info.cssselect('.hreview .release_header .release_title h1 a')[0].text
 
 
     @staticmethod
     @stripped
+    @exceptionable
     def get_album (info):
         return info.cssselect('.hreview .release_header .release_title h1 a')[1].text
 
 
     @staticmethod
     @stripped
+    @exceptionable
     def get_label (info):
         return info.cssselect('.hreview .label_tokens .token a b')[0].text
 
 
     @staticmethod
+    @exceptionable
     def get_releasedate (info):
         return convert_date(
-            info.cssselect('.hreview .release_header .release_details')[0].text_content().strip().split()[-1]
+            info.cssselect('.hreview .release_header .release_details')[0].text_content()\
+                .strip().split()[-1]
         )
 
     @staticmethod
     @stripped
+    @exceptionable
     def get_author (info):
         return info.cssselect('.hreview .b_author .author')[0].text
 
 
     @staticmethod
+    @exceptionable
     def get_pubdate (info):
         return convert_date(
             info.cssselect('.hreview .byline .date')[0].text
@@ -70,6 +77,7 @@ class DISReviews (TwoStep):
 
 
     @staticmethod
+    @exceptionable
     def get_score (info):
         el = info.cssselect('.ratings .mark .value')
         return int(el[0].text.strip()) \
@@ -100,6 +108,7 @@ class DISReviews (TwoStep):
         score        = self.get_score(content)
 
         return (url, artist, album, label, release_date, pub_date, author, score)
+
 
     def get_pagecount (self):
         handler    = urlopen(self.page_counter.construct_url(1))

@@ -25,7 +25,7 @@
 
 
 from utils.website   import TwoStep, parser
-from utils.papercuts import convert_date, stripped, urlopen
+from utils.papercuts import convert_date, stripped, exceptionable, urlopen
 
 
 
@@ -34,17 +34,20 @@ class DISNews (TwoStep):
 
     @staticmethod
     @stripped
+    @exceptionable
     def get_title (info):
         return info.cssselect('h1.title')[0].text_content()
 
 
     @staticmethod
     @stripped
+    @exceptionable
     def get_author (info):
         return info.cssselect('.content .byline .b_author a.author')[0].text
 
 
     @staticmethod
+    @exceptionable
     def get_date (info):
         return convert_date(
             info.cssselect('.content .byline .date')[0].text

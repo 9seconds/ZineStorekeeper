@@ -25,45 +25,44 @@
 
 import plugins
 
-
-import abc
-import sys
-import csv
-import urlparse
-import os
-import collections
-import itertools
-import locale
+from lxml.html import document_fromstring as parser, tostring as parser_str
+from locale    import LC_ALL, setlocale
+from urlparse  import urlunsplit
+from itertools import imap
+from sys       import stderr, exit
+from csv       import writer as csvwriter
+from abc       import abstractmethod, ABCMeta as Abstract
+from os        import extsep
 
 from . import workerconsumerpool as wcp
 from . import pagecounter
-from . import papercuts
 
-from lxml.html import document_fromstring as parser, tostring as parser_str
+from .papercuts import urlopen, rndsleep, HTTPError
+
 
 
 
 class Generic (object):
 
 
-    @abc.abstractmethod
+    @abstractmethod
     def get_sorter (self, tupl):
         pass
 
 
-    @abc.abstractmethod
+    @abstractmethod
     def get_page_data (self, content):
         pass
 
 
-    @abc.abstractmethod
+    @abstractmethod
     def start_parse_linkpage (self, page):
         pass
 
 
     @staticmethod
     def get_page_content (url):
-        page = papercuts.urlopen(url)
+        page = urlopen(url)
         if page is None:
             return None
         content = page.read()
@@ -98,30 +97,30 @@ class Generic (object):
         self.tries      = tries
         self.loc        = loc
 
-        __metaclass__ = abc.ABCMeta
+        __metaclass__ = Abstract
 
 
     def handle (self):
         content_results = []
 
-        locale.setlocale(locale.LC_ALL, self.loc)
+        setlocale(LC_ALL, self.loc)
 
         print 'Handling {0}'.format(self.task_name)
         print '{0} pages to handle'.format(self.get_pagecount())
-        for page in xrange(self.page_counter.left_bound, self.get_pagecount()+1):
-            #for page in xrange(self.page_counter.left_bound, 5):
+        #for page in xrange(self.page_counter.left_bound, self.get_pagecount()+1):
+        for page in xrange(self.page_counter.left_bound, 3):
             parse_results = None
             for attempt in xrange(self.tries):
                 parse_results = self._parse_linkpage(page)
                 if parse_results is not None:
                     break
             else:
-                sys.stder.write('Cannot handle with {0}'.format(self.output_file))
-                sys.exit(1)
+                stder.write('Cannot handle with {0}'.format(self.output_file))
+                exit(1)
 
             content_results.extend(parse_results)
 
-            papercuts.rndsleep(.5) # to avoid banning from a website side
+            rndsleep(.5) # to avoid banning from a website side
         content_results.sort(key = self.get_sorter)
 
         if self.csv_header is not None:
@@ -129,7 +128,7 @@ class Generic (object):
 
         self._save(content_results)
 
-        locale.setlocale(locale.LC_ALL, 'C')
+        setlocale(LC_ALL, 'C')
 
 
     def _parse_linkpage (self, page_number):
@@ -141,35 +140,35 @@ class Generic (object):
         )
         try:
             page = self.get_page_content(url)
-        except papercuts.HTTPError as e:
-            sys.stderr.write(
+        except HTTPError as e:
+            stderr.write(
                 "!!! Page '{0}' is unavailable [{1.code}]".format(page, e)
             )
-            return
+            return None
         if page is None:
-            sys.stderr.write('*** Problems with {0}. Please check'.format(url))
-            return
+            stderr.write('*** Problems with {0}. Please check'.format(url))
+            return None
 
         return self.start_parse_linkpage(parser(page))
 
 
     def _save (self, content):
-        prepared = itertools.imap(
+        prepared = imap(
             lambda tupl: tuple(unicode(x).encode('utf-8') for x in tupl),
             content
         )
         try:
             with open(self._get_output_filename(), 'wb') as output:
-                csv.writer(output).writerows(prepared)
+                csvwriter(output).writerows(prepared)
         except IOError:
-            sys.stder.write('Cannot handle with {0}'.format(self.output_file))
-            sys.exit(1)
+            stder.write('Cannot handle with {0}'.format(self.output_file))
+            exit(1)
 
 
     def _get_output_filename (self):
         return self.output \
             if self.output is not None \
-            else os.extsep.join((self.task_name.replace(' ', '.'), 'csv'))
+            else extsep.join((self.task_name.replace(' ', extsep), 'csv'))
 
 
     def get_pagecount (self):
@@ -177,9 +176,7 @@ class Generic (object):
 
 
     def construct_url (self, *parts):
-        return urlparse.urlunsplit(
-            ('http', self.domain, '/'.join(parts), '', '')
-        )
+        return urlunsplit( ('http', self.domain, '/'.join(parts), '', '') )
 
 
 
@@ -206,7 +203,7 @@ class OneStep (Generic):
 
 
     def start_parse_linkpage (self, page):
-        results = collections.deque()
+        results = []
         for el in self.get_elements(page):
             results.append(self.handle_element(el))
 
@@ -241,7 +238,7 @@ class TwoStep (Generic):
 
 
     def start_parse_linkpage (self, page):
-        results = collections.deque()
+        results = []
         handlers = wcp.Pool(self.get_content_handler(results))
         for el in self.get_elements(page):
             handlers.add(el)
@@ -262,7 +259,9 @@ class TwoStep (Generic):
                     parser(content).cssselect(self.css_content)[0]
                 ))
             except Exception as e:
-                print e
+                if __debug__:
+                    print '!!! ' + str(e)
+
                 method.panic('*** Problems with {0}. Please check.'.format(url))
                 return None
 
@@ -270,7 +269,7 @@ class TwoStep (Generic):
 
 
     def get_elements (self, document):
-        return itertools.imap(
+        return imap(
             lambda el: self.construct_url(el),
             ( el.get('href') for el in document.cssselect(self.css_elements) )
         )

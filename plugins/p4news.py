@@ -25,7 +25,7 @@
 
 
 from utils.website   import OneStep
-from utils.papercuts import convert_date, stripped
+from utils.papercuts import convert_date, stripped, exceptionable
 
 
 
@@ -33,11 +33,13 @@ class P4News (OneStep):
 
 
     @staticmethod
+    @exceptionable
     def get_titlelink (el):
         return el.cssselect('h3.title a')[0]
 
 
     @staticmethod
+    @exceptionable
     def get_posted (el):
         content = el.cssselect('.posted-at')[0].text_content().strip().split()
         return (
@@ -48,17 +50,20 @@ class P4News (OneStep):
 
     @staticmethod
     @stripped
+    @exceptionable
     def get_title (el):
         return P4News.get_titlelink(el).text_content()
 
 
     @staticmethod
     @stripped
+    @exceptionable
     def get_author (el):
         return P4News.get_posted(el)[0]
 
 
     @staticmethod
+    @exceptionable
     def get_date (el):
         return convert_date(P4News.get_posted(el)[1])
 
