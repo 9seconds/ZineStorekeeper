@@ -37,11 +37,11 @@ class FactReviews (TwoStep):
     @staticmethod
     @exceptionable
     def get_aa_line (info):
-        album      = info.cssselect('.category-reviews h9 i')[0].text_content().strip()
-        whole_line = info.cssselect('.category-reviews h9')[0].text_content()
-        artist     = whole_line.replace(album, '').strip()
-
-        return (artist[:-1], album)
+        whole_line = info.cssselect('.category-reviews h9')[0].text_content().split(':')
+        return (
+            whole_line[0].strip(),
+            ':'.join(whole_line[1:]).strip()
+        )
 
 
     @staticmethod
