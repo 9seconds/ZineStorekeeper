@@ -35,8 +35,10 @@ from abc         import abstractmethod, ABCMeta as Abstract
 from os          import extsep
 from collections import deque
 
-from .          import workerconsumerpool as wcp, pagecounter, progress
+from .          import pagecounter, progress
 from .papercuts import urlopen, rndsleep, HTTPError
+
+from gevent.pool import Pool
 
 
 
@@ -99,6 +101,18 @@ class Generic (object):
         __metaclass__ = Abstract
 
 
+    def handle_page_unit (self, unit):
+        parse_results = None
+        for attempt in xrange(self.tries):
+            parse_results = self._parse_linkpage(unit)
+            if parse_results is not None:
+                return parse_results
+        else:
+            stder.write('Cannot handle with {0}'.format(unit))
+            exit(1)
+
+
+
     def handle (self):
         content_results = []
 
@@ -106,7 +120,7 @@ class Generic (object):
 
         #for page in xrange(self.page_counter.left_bound, self.get_pagecount()+1):
         #for page in self.get_page_range(right_bound = 3):
-        work = self.get_progress(right_bound = 3)
+        work = self.get_progress(right_bound = 20)
         for page in work:
             work.set_dynamic(page)
 
@@ -121,7 +135,7 @@ class Generic (object):
 
             content_results.extend(parse_results)
 
-            rndsleep(.5) # to avoid banning from a website side
+            #rndsleep(.5) # to avoid banning from a website side
         content_results.sort(key = self.get_sorter)
 
         if self.csv_header is not None:
@@ -249,33 +263,34 @@ class TwoStep (Generic):
             tries,
             output
         )
+        self.pool = Pool(64)
 
 
     def start_parse_linkpage (self, page):
-        results  = deque()
-        handlers = wcp.Pool(self.get_content_handler(results))
-        for el in self.get_elements(page):
-            handlers.add(el)
-        handlers.process()
+        #results  = deque()
+        #handlers = wcp.Pool(self.get_content_handler(results))
+        #for el in self.get_elements(page):
+        #    handlers.add(el)
+        #handlers.process()
 
-        return results
+        #return results
+        return self.pool.map(self.get_content_handler(), self.get_elements(page))
 
 
-    def get_content_handler (self, results):
-        @wcp.Worker.Method
+
+    def get_content_handler (self):
         def method (url):
             try:
                 content = self.get_page_content(url)
                 if content is None:
                     raise Exception
-                results.append(self.get_page_data(
-                    url,
-                    parser(content).cssselect(self.css_content)[0]
-                ))
+                else:
+                    return self.get_page_data(
+                        url,
+                        parser(content).cssselect(self.css_content)[0]
+                    )
             except Exception as e:
-                method.panic('*** Problems with {0}. Please check.'.format(url))
-
-                return None
+                stderr.write('**^ Problems with {0}. Please check.\n'.format(url))
 
         return method
 

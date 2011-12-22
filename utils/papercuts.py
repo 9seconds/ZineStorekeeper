@@ -26,9 +26,10 @@
 
 from dateutil.parser import parse as dateparse
 from random          import expovariate as rnd
-from time            import sleep
+from gevent          import sleep
 from urllib2         import urlopen as liburlopen, HTTPError, URLError
 from sys             import stderr
+from httplib         import HTTPException
 
 
 
@@ -109,6 +110,7 @@ def urlopen (url):
             elif e.code in TEMP_ERROR_CODES:
                 rndsleep()
             else:
+                print 'HTTPERROR'
                 raise e
-        except URLError:
+        except (HTTPException, URLError, IOError):
             rndsleep(MEAN_TIME*5)
