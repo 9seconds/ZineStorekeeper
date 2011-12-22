@@ -28,18 +28,23 @@ import plugins
 from lxml.html   import document_fromstring as parser, tostring as parser_str
 from locale      import LC_ALL, setlocale
 from urlparse    import urlunsplit
-from itertools   import imap
+from itertools   import imap, chain
 from sys         import stderr, exit
 from csv         import writer as csvwriter
 from abc         import abstractmethod, ABCMeta as Abstract
 from os          import extsep
 from collections import deque
 
-from .          import pagecounter, progress
+from .          import pagecounter
 from .papercuts import urlopen, rndsleep, HTTPError
 
 from gevent.pool import Pool
 
+import multiprocessing
+
+CPU_COUNT    = multiprocessing.cpu_count()
+GLOBAL_COUNT = 3*CPU_COUNT
+ALL_COUNT    = GLOBAL_COUNT**2
 
 
 
@@ -92,11 +97,13 @@ class Generic (object):
             self.construct_url(pagination),
             pagination_start
         )
-        self.csv_header = csv_header
-        self.output     = output
-        self.task_name  = domain
-        self.tries      = tries
-        self.loc        = loc
+        self.csv_header   = csv_header
+        self.output       = output
+        self.task_name    = domain
+        self.tries        = tries
+        self.loc          = loc
+        self.global_pool  = Pool(GLOBAL_COUNT)
+        self.element_pool = Pool(ALL_COUNT)
 
         __metaclass__ = Abstract
 
@@ -104,7 +111,7 @@ class Generic (object):
     def handle_page_unit (self, unit):
         parse_results = None
         for attempt in xrange(self.tries):
-            parse_results = self._parse_linkpage(unit)
+            parse_results = self.parse_linkpage(unit)
             if parse_results is not None:
                 return parse_results
         else:
@@ -112,57 +119,40 @@ class Generic (object):
             exit(1)
 
 
-
     def handle (self):
-        content_results = []
-
         setlocale(LC_ALL, self.loc)
 
-        #for page in xrange(self.page_counter.left_bound, self.get_pagecount()+1):
-        #for page in self.get_page_range(right_bound = 3):
-        work = self.get_progress(right_bound = 20)
-        for page in work:
-            work.set_dynamic(page)
+        elements = chain.from_iterable(self.global_pool.map(
+            lambda unit: self.handle_page_unit(unit),
+            self.get_progress(right_bound = 5)
+        ))
 
-            parse_results = None
-            for attempt in xrange(self.tries):
-                parse_results = self._parse_linkpage(page)
-                if parse_results is not None:
-                    break
-            else:
-                stder.write('Cannot handle with {0}'.format(self.output_file))
-                exit(1)
-
-            content_results.extend(parse_results)
-
-            #rndsleep(.5) # to avoid banning from a website side
-        content_results.sort(key = self.get_sorter)
+        content = list(chain.from_iterable(self.element_pool.map(
+            lambda url: self.parse_page(url),
+            elements
+        )))
+        content.sort(key = self.get_sorter)
 
         if self.csv_header is not None:
-            content_results.insert(0, self.csv_header)
+            content.insert(0, self.csv_header)
 
-        self._save(content_results)
+        self._save(content)
 
         setlocale(LC_ALL, 'C')
 
 
-    def _parse_linkpage (self, page_number):
-        url = self.page_counter.construct_url(page_number)
-
+    def parse_page (self, url):
         try:
-            page = self.get_page_content(url)
+            return self.start_parse_page(
+                url,
+                parser( self.get_page_content(url) )
+            )
         except HTTPError as e:
             stderr.write(
                 "!!! Page '{0}' is unavailable [{1.code}]".format(page, e)
             )
-
-            return None
         if page is None:
             stderr.write('*** Problems with {0}. Please check'.format(url))
-
-            return None
-
-        return self.start_parse_linkpage(parser(page))
 
 
     def _save (self, content):
@@ -196,15 +186,17 @@ class Generic (object):
         lb = left_bound  if left_bound is not None  else self.page_counter.left_bound
         rb = right_bound if right_bound is not None else self.get_pagecount()
 
-        return progress.Progress(
-            self.get_progress_template(),
-            rb,
-            xrange(lb, rb+1)
-        )
+        return xrange(lb, rb+1)
 
 
     def get_progress_template (self):
         return self.task_name + ' : {dynamic} [{frac:.1%}] {fixedline}'
+
+
+
+
+
+
 
 
 
@@ -230,7 +222,11 @@ class OneStep (Generic):
         )
 
 
-    def start_parse_linkpage (self, page):
+    def handle_page_unit (self, unit):
+        return (self.page_counter.construct_url(unit),)
+
+
+    def start_parse_page (self, url, page):
         results = deque()
         for el in self.get_elements(page):
             results.append(self.handle_element(el))
@@ -240,6 +236,11 @@ class OneStep (Generic):
 
     def get_sorter (self, tupl):
         return tupl[0]
+
+
+
+
+
 
 
 
@@ -266,33 +267,27 @@ class TwoStep (Generic):
         self.pool = Pool(64)
 
 
-    def start_parse_linkpage (self, page):
-        #results  = deque()
-        #handlers = wcp.Pool(self.get_content_handler(results))
-        #for el in self.get_elements(page):
-        #    handlers.add(el)
-        #handlers.process()
+    def handle_page_unit (self, unit):
+        url  = self.page_counter.construct_url(unit)
+        page = None
 
-        #return results
-        return self.pool.map(self.get_content_handler(), self.get_elements(page))
+        try:
+            return self.get_elements(parser( self.get_page_content(url) ))
+        except HTTPError as e:
+            stderr.write(
+                "!!! Page '{0}' is unavailable [{1.code}]".format(page, e)
+            )
+        if page is None:
+            stderr.write('*** Problems with {0}. Please check'.format(url))
+
+        return tuple()
 
 
-
-    def get_content_handler (self):
-        def method (url):
-            try:
-                content = self.get_page_content(url)
-                if content is None:
-                    raise Exception
-                else:
-                    return self.get_page_data(
-                        url,
-                        parser(content).cssselect(self.css_content)[0]
-                    )
-            except Exception as e:
-                stderr.write('**^ Problems with {0}. Please check.\n'.format(url))
-
-        return method
+    def start_parse_page (self, url, page):
+        return (self.get_page_data(
+            url,
+            page.cssselect(self.css_content)[0]
+        ),)
 
 
     def get_elements (self, document):

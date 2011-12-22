@@ -61,8 +61,10 @@ import plugins
 
 try:
     for site in plugins.get_plugins(sys.argv[1:]):
+        task = site()
+        print 'Handling {0}'.format(task.task_name)
         gc.collect()
-        site().handle()
+        task.handle()
 except ValueError as e:
     print e
     print 'You shoud run program with "all" key or with a subset of following keys:'
