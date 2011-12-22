@@ -47,10 +47,12 @@ try:
 except ImportError:
     err('dateutil', 'python-dateutil')
 
-
-
-import gevent.monkey
-gevent.monkey.patch_all()
+try:
+    import gevent
+    import gevent.monkey
+    gevent.monkey.patch_all()
+except ImportError:
+    err('gevent', 'python-gevent')
 
 
 

@@ -25,6 +25,8 @@
 
 import plugins
 
+import multiprocessing
+
 from lxml.html   import document_fromstring as parser, tostring as parser_str
 from locale      import LC_ALL, setlocale
 from urlparse    import urlunsplit
@@ -34,13 +36,12 @@ from csv         import writer as csvwriter
 from abc         import abstractmethod, ABCMeta as Abstract
 from os          import extsep
 from collections import deque
+from gevent.pool import Pool
 
 from .          import pagecounter
 from .papercuts import urlopen, rndsleep, HTTPError
 
-from gevent.pool import Pool
 
-import multiprocessing
 
 CPU_COUNT    = multiprocessing.cpu_count()
 GLOBAL_COUNT = 3*CPU_COUNT
@@ -127,6 +128,8 @@ class Generic (object):
             self.get_progress(right_bound = 5)
         ))
 
+        rndsleep()
+
         content = list(chain.from_iterable(self.element_pool.map(
             lambda url: self.parse_page(url),
             elements
@@ -143,10 +146,7 @@ class Generic (object):
 
     def parse_page (self, url):
         try:
-            return self.start_parse_page(
-                url,
-                parser( self.get_page_content(url) )
-            )
+            return self.start_parse_page(url, parser(self.get_page_content(url)))
         except HTTPError as e:
             stderr.write(
                 "!!! Page '{0}' is unavailable [{1.code}]".format(page, e)
@@ -161,14 +161,14 @@ class Generic (object):
             content
         )
         try:
-            with open(self._get_output_filename(), 'wb') as output:
+            with open(self.get_output_filename(), 'wb') as output:
                 csvwriter(output).writerows(prepared)
         except IOError:
             stder.write('Cannot handle with {0}'.format(self.output_file))
             exit(1)
 
 
-    def _get_output_filename (self):
+    def get_output_filename (self):
         return self.output \
             if self.output is not None \
             else extsep.join((self.task_name.replace(' ', extsep), 'csv'))
@@ -227,11 +227,7 @@ class OneStep (Generic):
 
 
     def start_parse_page (self, url, page):
-        results = deque()
-        for el in self.get_elements(page):
-            results.append(self.handle_element(el))
-
-        return results
+        return ( self.handle_element(el) for el in self.get_elements(page) )
 
 
     def get_sorter (self, tupl):
@@ -264,18 +260,16 @@ class TwoStep (Generic):
             tries,
             output
         )
-        self.pool = Pool(64)
 
 
     def handle_page_unit (self, unit):
         url  = self.page_counter.construct_url(unit)
-        page = None
 
         try:
             return self.get_elements(parser( self.get_page_content(url) ))
         except HTTPError as e:
             stderr.write(
-                "!!! Page '{0}' is unavailable [{1.code}]".format(page, e)
+                "!!! Page '{0}' is unavailable [{1.code}]".format(url, e)
             )
         if page is None:
             stderr.write('*** Problems with {0}. Please check'.format(url))
