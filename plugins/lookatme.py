@@ -24,27 +24,9 @@
 
 
 
-import datetime
-
 from utils.website   import OneStep, parser
-from utils.papercuts import convert_date, stripped, exceptionable, urlopen
+from utils.papercuts import convert_rudate, stripped, exceptionable, urlopen
 
-
-MONTHS = {
-    u'января'   : u'january',
-    u'февраля'  : u'february',
-    u'марта'    : u'march',
-    u'апреля'   : u'april',
-    u'мая'      : u'may',
-    u'июня'     : u'june',
-    u'июля'     : u'july',
-    u'августа'  : u'august',
-    u'сентября' : u'september',
-    u'октября'  : u'october',
-    u'ноября'   : u'november',
-    u'декабря'  : u'december'
-}
-YEAR = str(datetime.datetime.today().year)
 
 
 
@@ -68,13 +50,7 @@ class LookAtMe (OneStep):
     @staticmethod
     @exceptionable
     def get_date (el):
-        date = el.cssselect('.data span')[0].text_content().replace(u'года', '').strip().split(u' ')
-
-        if len(date) == 2: # 20 октября, без указания года = текущий год
-            date.append(YEAR)
-        date[1] = MONTHS[date[1]]
-
-        return convert_date(u' '.join(date))
+        return convert_rudate(el.cssselect('.data span')[0].text_content())
 
 
     @exceptionable

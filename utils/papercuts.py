@@ -72,7 +72,7 @@ RUENG_MONTHS = {
     u'декабрь'  : u'december'
 }
 YEAR_PATTERN = re.compile('(?:(?:19)|(?:20))\d{2}', re.UNICODE)
-TODAY = datetime.datetime.today()
+YEAR_TODAY   = datetime.datetime.today().year
 
 
 class HTTP404 (HTTPError):
@@ -129,7 +129,7 @@ def convert_date (dt, dayfirst = False, yearfirst = False, fuzzy = False):
 
 
 def convert_rudate (dt, dayfirst = False, yearfirst = False, fuzzy = True):
-    date = u'{0} {1}'.format(dt, TODAY.year) \
+    date = u'{0} {1}'.format(dt, YEAR_TODAY) \
         if YEAR_PATTERN.search(dt) is None \
         else dt
     return convert_date(
