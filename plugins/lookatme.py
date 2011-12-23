@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#       gorillavsbearnews.py
+#       lookatme.py
 #
 #       Copyright 2011 Serge Arkhipov <serge@aerialsounds.org>
 #
