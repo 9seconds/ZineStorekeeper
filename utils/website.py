@@ -123,9 +123,9 @@ class Generic (object):
     def handle (self):
         setlocale(LC_ALL, self.loc)
 
-        elements = chain.from_iterable(self.global_pool.map(
+        elements = chain.from_iterable(self.global_pool.imap_unordered(
             lambda unit: self.handle_page_unit(unit),
-            self.get_progress(right_bound = 5)
+            self.get_progress(right_bound = 20)
         ))
 
         rndsleep()
