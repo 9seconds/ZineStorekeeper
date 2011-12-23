@@ -112,7 +112,7 @@ class Generic (object):
     def handle (self):
         elements = chain.from_iterable(self.global_pool.imap_unordered(
             self.handle_page_unit,
-            self.get_progress(right_bound = 90)
+            self.get_progress(right_bound = 3)
         ))
 
         content = list(chain.from_iterable(self.element_pool.map(

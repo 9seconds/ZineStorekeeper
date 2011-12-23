@@ -24,12 +24,16 @@
 
 
 
+import re
+import datetime
+
 from dateutil.parser import parse as dateparse
 from random          import expovariate as rnd
 from gevent          import sleep
 from urllib2         import urlopen as liburlopen, HTTPError, URLError
 from sys             import stderr
 from httplib         import HTTPException
+from itertools       import imap
 
 
 
@@ -40,7 +44,35 @@ TEMP_ERROR_CODES = frozenset((
     403, 408, 409, 415, 417,
     500, 501, 502, 503, 504, 507, 509
 ))
+RUENG_MONTHS = {
+    u'января'   : u'january',
+    u'февраля'  : u'february',
+    u'марта'    : u'march',
+    u'апреля'   : u'april',
+    u'мая'      : u'may',
+    u'июня'     : u'june',
+    u'июля'     : u'july',
+    u'августа'  : u'august',
+    u'сентября' : u'september',
+    u'октября'  : u'october',
+    u'ноября'   : u'november',
+    u'декабря'  : u'december',
 
+    u'январь'   : u'january',
+    u'февраль'  : u'february',
+    u'март'     : u'march',
+    u'апрель'   : u'april',
+    u'май'      : u'may',
+    u'июнь'     : u'june',
+    u'июль'     : u'july',
+    u'август'   : u'august',
+    u'сентябрь' : u'september',
+    u'октябрь'  : u'october',
+    u'ноябрь'   : u'november',
+    u'декабрь'  : u'december'
+}
+YEAR_PATTERN = re.compile('(?:(?:19)|(?:20))\d{2}', re.UNICODE)
+TODAY = datetime.datetime.today()
 
 
 class HTTP404 (HTTPError):
@@ -94,6 +126,25 @@ def convert_date (dt, dayfirst = False, yearfirst = False, fuzzy = False):
         fuzzy     = fuzzy,
         ignoretz  = True
     ).strftime('%d.%m.%Y')
+
+
+def convert_rudate (dt, dayfirst = False, yearfirst = False, fuzzy = True):
+    date = u'{0} {1}'.format(dt, TODAY.year) \
+        if YEAR_PATTERN.search(dt) is None \
+        else dt
+    return convert_date(
+        u' '.join(imap(
+            lambda chunk: RUENG_MONTHS.get(chunk.lower(), chunk),
+            date.split(u' ')
+        )),
+        dayfirst,
+        yearfirst,
+        fuzzy
+    )
+
+
+
+
 
 
 def rndsleep (mean_time = MEAN_TIME, min_time = MIN_TIME):
