@@ -67,16 +67,6 @@ class Generic (object):
         pass
 
 
-    @staticmethod
-    def get_page_content (url):
-        page = urlopen(url)
-        if page is None:
-            return None
-        content = page.read()
-        page.close()
-        return content
-
-
     @classmethod
     def register (cls):
         plugins.register(cls, cls.__name__.lower())
@@ -90,6 +80,7 @@ class Generic (object):
         pagination_start = 1,
         tries            = 3,
         loc              = 'en_US',
+        encoding         = 'utf-8',
         output           = None
     ):
         self.domain       = domain
@@ -103,6 +94,7 @@ class Generic (object):
         self.task_name    = domain
         self.tries        = tries
         self.loc          = loc
+        self.encoding     = encoding
         self.global_pool  = Pool(GLOBAL_COUNT)
         self.element_pool = Pool(ALL_COUNT)
 
@@ -125,7 +117,7 @@ class Generic (object):
 
         elements = chain.from_iterable(self.global_pool.imap_unordered(
             lambda unit: self.handle_page_unit(unit),
-            self.get_progress(right_bound = 20)
+            self.get_progress(right_bound = 100)
         ))
 
         rndsleep()
@@ -166,6 +158,15 @@ class Generic (object):
         except IOError:
             stder.write('Cannot handle with {0}'.format(self.output_file))
             exit(1)
+
+
+    def get_page_content (self, url):
+        page = urlopen(url)
+        if page is None:
+            return None
+        content = page.read()
+        page.close()
+        return content.decode(self.encoding)
 
 
     def get_output_filename (self):
@@ -210,7 +211,9 @@ class OneStep (Generic):
         csv_header       = None,
         pagination_start = 1,
         tries            = 3,
-        output           = None
+        output           = None,
+        loc              = 'en_US',
+        encoding         = 'utf-8'
     ):
         super(OneStep, self).__init__(
             domain,
@@ -218,6 +221,8 @@ class OneStep (Generic):
             csv_header,
             pagination_start,
             tries,
+            loc,
+            encoding,
             output
         )
 
@@ -250,7 +255,9 @@ class TwoStep (Generic):
         csv_header       = None,
         pagination_start = 1,
         tries            = 3,
-        output           = None
+        output           = None,
+        loc              = 'en_US',
+        encoding         = 'utf-8'
     ):
         super(TwoStep, self).__init__(
             domain,
@@ -258,6 +265,8 @@ class TwoStep (Generic):
             csv_header,
             pagination_start,
             tries,
+            loc,
+            encoding,
             output
         )
 
