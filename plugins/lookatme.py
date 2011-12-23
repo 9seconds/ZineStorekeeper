@@ -92,7 +92,7 @@ class LookAtMe (OneStep):
             output     = output,
             csv_header = csv_header
         )
-        self.task_name = '{0} music flow'.format(self.domain)
+        self.task_name = self.domain
 
 
     def get_pagecount (self):

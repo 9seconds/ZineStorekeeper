@@ -33,7 +33,7 @@ __all__ = (
     'disreviews',
     'p4news',
     'disnews',
-    'gorillavsbearnews',
+    'gorillavsbear',
     'quietusnews',
     'quietusreviews',
     'factnews',

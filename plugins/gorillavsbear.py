@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#       gorillavsbearnews.py
+#       gorillavsbear.py
 #
 #       Copyright 2011 Serge Arkhipov <serge@aerialsounds.org>
 #
@@ -29,7 +29,7 @@ from utils.papercuts import convert_date, stripped, exceptionable
 
 
 
-class GorillaVsBearNews (OneStep):
+class GorillaVsBear (OneStep):
 
 
     @exceptionable
@@ -63,13 +63,13 @@ class GorillaVsBearNews (OneStep):
 
     def __init__ (self, output = None):
         csv_header = ('URL', 'Title', 'Author', 'Date')
-        super(GorillaVsBearNews, self).__init__(
+        super(GorillaVsBear, self).__init__(
             'gorillavsbear.net',
             '/page/{0}',
             output     = output,
             csv_header = csv_header
         )
-        self.task_name = '{0} news'.format(self.domain)
+        self.task_name = self.domain
 
 
     def get_elements (self, page):
@@ -86,4 +86,4 @@ class GorillaVsBearNews (OneStep):
 
 
 
-GorillaVsBearNews.register()
+GorillaVsBear.register()
