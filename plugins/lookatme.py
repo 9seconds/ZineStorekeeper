@@ -90,8 +90,7 @@ class LookAtMe (OneStep):
             'lookatme.ru',
             '/flow/posts/music-radar?page={0}',
             output     = output,
-            csv_header = csv_header,
-            loc        = 'ru_RU.UTF-8'
+            csv_header = csv_header
         )
         self.task_name = '{0} music flow'.format(self.domain)
 

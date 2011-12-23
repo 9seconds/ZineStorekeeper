@@ -28,7 +28,6 @@ import plugins
 import multiprocessing
 
 from lxml.html   import document_fromstring as parser, tostring as parser_str
-from locale      import LC_ALL, setlocale
 from urlparse    import urlunsplit
 from itertools   import imap, chain
 from sys         import stderr, exit
@@ -39,7 +38,7 @@ from collections import deque
 from gevent.pool import Pool
 
 from .          import pagecounter
-from .papercuts import urlopen, rndsleep, HTTPError
+from .papercuts import urlopen, HTTPError
 
 
 
@@ -79,7 +78,6 @@ class Generic (object):
         csv_header       = None,
         pagination_start = 1,
         tries            = 3,
-        loc              = 'en_US',
         encoding         = 'utf-8',
         output           = None
     ):
@@ -93,7 +91,6 @@ class Generic (object):
         self.output       = output
         self.task_name    = domain
         self.tries        = tries
-        self.loc          = loc
         self.encoding     = encoding
         self.global_pool  = Pool(GLOBAL_COUNT)
         self.element_pool = Pool(ALL_COUNT)
@@ -113,17 +110,13 @@ class Generic (object):
 
 
     def handle (self):
-        setlocale(LC_ALL, self.loc)
-
         elements = chain.from_iterable(self.global_pool.imap_unordered(
-            lambda unit: self.handle_page_unit(unit),
-            self.get_progress(right_bound = 100)
+            self.handle_page_unit,
+            self.get_progress(right_bound = 90)
         ))
 
-        rndsleep()
-
         content = list(chain.from_iterable(self.element_pool.map(
-            lambda url: self.parse_page(url),
+            self.parse_page,
             elements
         )))
         content.sort(key = self.get_sorter)
@@ -132,8 +125,6 @@ class Generic (object):
             content.insert(0, self.csv_header)
 
         self._save(content)
-
-        setlocale(LC_ALL, 'C')
 
 
     def parse_page (self, url):
@@ -211,9 +202,8 @@ class OneStep (Generic):
         csv_header       = None,
         pagination_start = 1,
         tries            = 3,
-        output           = None,
-        loc              = 'en_US',
-        encoding         = 'utf-8'
+        encoding         = 'utf-8',
+        output           = None
     ):
         super(OneStep, self).__init__(
             domain,
@@ -221,7 +211,6 @@ class OneStep (Generic):
             csv_header,
             pagination_start,
             tries,
-            loc,
             encoding,
             output
         )
@@ -255,9 +244,8 @@ class TwoStep (Generic):
         csv_header       = None,
         pagination_start = 1,
         tries            = 3,
-        output           = None,
-        loc              = 'en_US',
-        encoding         = 'utf-8'
+        encoding         = 'utf-8',
+        output           = None
     ):
         super(TwoStep, self).__init__(
             domain,
@@ -265,7 +253,6 @@ class TwoStep (Generic):
             csv_header,
             pagination_start,
             tries,
-            loc,
             encoding,
             output
         )
