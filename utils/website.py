@@ -115,7 +115,6 @@ class Generic (object):
             self.handle_page_unit,
             self.get_progress()
         ))
-
         content = list(chain.from_iterable(self.element_pool.imap_unordered(
             self.parse_page,
             elements
