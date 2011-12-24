@@ -37,7 +37,7 @@ from itertools       import imap
 
 
 
-TRIES            = 3
+TRIES            = 5
 MIN_TIME         = .2
 MEAN_TIME        = 1
 TEMP_ERROR_CODES = frozenset((
