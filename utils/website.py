@@ -128,14 +128,14 @@ class Generic (object):
 
 
     def parse_page (self, url):
-        try:
-            return self.start_parse_page(url, parser(self.get_page_content(url)))
-        except HTTPError as e:
-            stderr.write(
-                "!!! Page '{0}' is unavailable [{1.code}]".format(page, e)
-            )
-        if page is None:
-            stderr.write('*** Problems with {0}. Please check'.format(url))
+        for attempt in xrange(self.tries):
+            try:
+                return self.start_parse_page(
+                    url,
+                    parser(self.get_page_content(url))
+                )
+            except ValueError: # if self.get_page_content returns None and parser dies
+                pass
 
 
     def get_page_content (self, url):
@@ -152,9 +152,13 @@ class Generic (object):
 
 
     def save (self, content):
+        prepared = imap(
+            lambda tupl: tuple(unicode(x).encode('utf-8') for x in tupl),
+            content
+        )
         try:
             with open(self.get_output_filename(), 'wb') as output:
-                csvwriter(output).writerows(content)
+                csvwriter(output).writerows(prepared)
         except IOError:
             stder.write('Cannot handle with {0}'.format(self.output_file))
             exit(1)
