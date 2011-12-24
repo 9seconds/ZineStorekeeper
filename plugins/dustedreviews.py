@@ -79,7 +79,8 @@ class DustedReviews (TwoStep):
             'dustedmagazine.com',
             '/reviews/archive/{0}',
             output     = output,
-            csv_header = csv_header
+            csv_header = csv_header,
+            encoding   = 'iso-8859-1'
         )
         self.task_name   = '{0} reviews'.format(self.domain)
         self.str_range   = '0' + string.ascii_lowercase

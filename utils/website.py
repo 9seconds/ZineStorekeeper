@@ -36,6 +36,7 @@ from abc         import abstractmethod, ABCMeta as Abstract
 from os          import extsep
 from collections import deque
 from gevent.pool import Pool
+from chardet     import detect as charset_detect
 
 from .          import pagecounter
 from .papercuts import urlopen, HTTPError
@@ -78,7 +79,7 @@ class Generic (object):
         csv_header       = None,
         pagination_start = 1,
         tries            = 3,
-        encoding         = 'utf-8',
+        encoding         = None,
         output           = None
     ):
         self.domain       = domain
@@ -112,10 +113,10 @@ class Generic (object):
     def handle (self):
         elements = chain.from_iterable(self.global_pool.imap_unordered(
             self.handle_page_unit,
-            self.get_progress(right_bound = 3)
+            self.get_progress()
         ))
 
-        content = list(chain.from_iterable(self.element_pool.map(
+        content = list(chain.from_iterable(self.element_pool.imap_unordered(
             self.parse_page,
             elements
         )))
@@ -124,7 +125,7 @@ class Generic (object):
         if self.csv_header is not None:
             content.insert(0, self.csv_header)
 
-        self._save(content)
+        self.save(content)
 
 
     def parse_page (self, url):
@@ -138,7 +139,20 @@ class Generic (object):
             stderr.write('*** Problems with {0}. Please check'.format(url))
 
 
-    def _save (self, content):
+    def get_page_content (self, url):
+        page = urlopen(url)
+        if page is None:
+            return None
+        content = page.read()
+        page.close()
+        enc = self.encoding \
+            if self.encoding is not None \
+            else charset_detect(content)['encoding'].lower()
+
+        return content.decode(enc)
+
+
+    def save (self, content):
         prepared = imap(
             lambda tupl: tuple(unicode(x).encode('utf-8') for x in tupl),
             content
@@ -149,15 +163,6 @@ class Generic (object):
         except IOError:
             stder.write('Cannot handle with {0}'.format(self.output_file))
             exit(1)
-
-
-    def get_page_content (self, url):
-        page = urlopen(url)
-        if page is None:
-            return None
-        content = page.read()
-        page.close()
-        return content.decode(self.encoding)
 
 
     def get_output_filename (self):
@@ -202,7 +207,7 @@ class OneStep (Generic):
         csv_header       = None,
         pagination_start = 1,
         tries            = 3,
-        encoding         = 'utf-8',
+        encoding         = None,
         output           = None
     ):
         super(OneStep, self).__init__(
@@ -244,7 +249,7 @@ class TwoStep (Generic):
         csv_header       = None,
         pagination_start = 1,
         tries            = 3,
-        encoding         = 'utf-8',
+        encoding         = None,
         output           = None
     ):
         super(TwoStep, self).__init__(

@@ -26,6 +26,8 @@
 
 import sys
 import gc
+import locale
+
 
 
 def err (module_name, package_name):
@@ -54,6 +56,11 @@ try:
 except ImportError:
     err('gevent', 'python-gevent')
 
+try:
+    import chardet
+except ImportError:
+    err('chardet', 'python-charded')
+
 
 
 from plugins import *
@@ -61,14 +68,17 @@ import plugins
 
 
 
-try:
-    for site in plugins.get_plugins(sys.argv[1:]):
-        task = site()
-        print 'Handling {0}'.format(task.task_name)
-        gc.collect()
-        task.handle()
-except ValueError as e:
-    print e
-    print 'You shoud run program with "all" key or with a subset of following keys:'
-    for name in sorted(plugins.__all__):
-        print '  - ' + name
+if __name__ == '__main__':
+    locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
+    try:
+        for site in plugins.get_plugins(sys.argv[1:]):
+            task = site()
+            print 'Handling {0}'.format(task.task_name)
+            gc.collect()
+            task.handle()
+    except ValueError as e:
+        print e
+        print 'You shoud run program with "all" key or with a subset of following keys:'
+        for name in sorted(plugins.__all__):
+            print '  - ' + name

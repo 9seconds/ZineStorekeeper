@@ -101,8 +101,9 @@ def exceptionable (func):
             return func(*args)
         except Exception as e:
             if __debug__:
-                stderr.write('!!! There were the problem with {0} content handler.\n    Exception: {1}\n'.format(
+                stderr.write('!!! There were problems with {0} content handler.\n    Args: {1}\n    Exception: {2}\n'.format(
                     func.__name__,
+                    str(args),
                     str(e)
                 ))
             else:
