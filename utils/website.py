@@ -152,13 +152,9 @@ class Generic (object):
 
 
     def save (self, content):
-        prepared = imap(
-            lambda tupl: tuple(unicode(x).encode('utf-8') for x in tupl),
-            content
-        )
         try:
             with open(self.get_output_filename(), 'wb') as output:
-                csvwriter(output).writerows(prepared)
+                csvwriter(output).writerows(content)
         except IOError:
             stder.write('Cannot handle with {0}'.format(self.output_file))
             exit(1)
@@ -183,10 +179,6 @@ class Generic (object):
         rb = right_bound if right_bound is not None else self.get_pagecount()
 
         return xrange(lb, rb+1)
-
-
-    def get_progress_template (self):
-        return self.task_name + ' : {dynamic} [{frac:.1%}] {fixedline}'
 
 
 

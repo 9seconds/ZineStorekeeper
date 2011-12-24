@@ -90,7 +90,8 @@ class P4Reviews (TwoStep):
             'pitchfork.com',
             '/reviews/albums/{0}',
             output     = output,
-            csv_header = csv_header
+            csv_header = csv_header,
+            encoding   = 'utf-8'
         )
         self.task_name    = '{0} reviews'.format(self.domain)
         self.css_elements = '.review-item .review a'

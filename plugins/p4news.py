@@ -78,7 +78,8 @@ class P4News (OneStep):
             'pitchfork.com',
             '/news/{0}',
             output     = output,
-            csv_header = csv_header
+            csv_header = csv_header,
+            encoding   = 'utf-8'
         )
         self.task_name = '{0} news'.format(self.domain)
 
