@@ -106,7 +106,7 @@ class Generic (object):
             if parse_results is not None:
                 return parse_results
         else:
-            stder.write('Cannot handle with {0}'.format(unit))
+            stderr.write('Cannot handle with {0}'.format(unit))
             exit(1)
 
 
@@ -136,6 +136,9 @@ class Generic (object):
                 )
             except ValueError: # if self.get_page_content returns None and parser dies
                 pass
+            except IndexError:
+                print 'Some problems with {0}. Please check'.format(url)
+                return ('','','')
 
 
     def get_page_content (self, url):
