@@ -34,7 +34,6 @@ from sys         import stderr, exit
 from csv         import writer as csvwriter
 from abc         import abstractmethod, ABCMeta as Abstract
 from os          import extsep
-from collections import deque
 from gevent.pool import Pool
 from chardet     import detect as charset_detect
 
