@@ -39,7 +39,7 @@ from gevent.pool import Pool
 from chardet     import detect as charset_detect
 
 from .          import pagecounter
-from .papercuts import urlopen, HTTPError
+from .papercuts import urlopen, HTTP404
 
 
 
@@ -92,9 +92,15 @@ class Generic (object):
         self.output       = output
         self.task_name    = domain
         self.tries        = tries
-        self.encoding     = encoding
         self.global_pool  = Pool(GLOBAL_COUNT)
         self.element_pool = Pool(ALL_COUNT)
+
+        if encoding == 'auto':
+            self.charset_decoder = lambda s: s.decode(charset_detect(s)['encoding'].lower())
+        elif encoding is not None:
+            self.charset_decoder = lambda s: s.decode(encoding.lower())
+        else:
+            self.charset_decoder = lambda s: s
 
         __metaclass__ = Abstract
 
@@ -111,14 +117,16 @@ class Generic (object):
 
 
     def handle (self):
-        elements = chain.from_iterable(self.global_pool.imap_unordered(
-            self.handle_page_unit,
-            self.get_progress()
-        ))
-        content = list(chain.from_iterable(self.element_pool.imap_unordered(
-            self.parse_page,
-            elements
-        )))
+        content = filter(
+            None,
+            chain.from_iterable(self.element_pool.imap_unordered(
+                self.parse_page,
+                chain.from_iterable(self.global_pool.imap_unordered(
+                    self.handle_page_unit,
+                    self.get_progress(right_bound = 15)
+                ))
+            ))
+        )
         content.sort(key = self.get_sorter)
 
         if self.csv_header is not None:
@@ -134,11 +142,13 @@ class Generic (object):
                     url,
                     parser(self.get_page_content(url))
                 )
+                break
             except ValueError: # if self.get_page_content returns None and parser dies
                 pass
-            except IndexError:
+            except (HTTP404, IndexError): # IndexError raised by lxml.etree in order if parsing was unsuccessful
                 print 'Some problems with {0}. Please check'.format(url)
-                return ('','','')
+        else:
+            print 'Some problems with {0}. Please check'.format(url)
 
 
     def get_page_content (self, url):
@@ -147,11 +157,8 @@ class Generic (object):
             return None
         content = page.read()
         page.close()
-        enc = self.encoding \
-            if self.encoding is not None \
-            else charset_detect(content)['encoding'].lower()
 
-        return content.decode(enc)
+        return self.charset_decoder(content)
 
 
     def save (self, content):
@@ -187,6 +194,9 @@ class Generic (object):
 
         return xrange(lb, rb+1)
 
+
+    def get_empty_tuple (self):
+        return tuple()
 
 
 

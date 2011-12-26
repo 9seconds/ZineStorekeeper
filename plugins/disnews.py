@@ -60,8 +60,7 @@ class DISNews (TwoStep):
             'drownedinsound.com',
             '/news/page/{0}',
             output     = output,
-            csv_header = csv_header,
-            encoding   = 'utf-8'
+            csv_header = csv_header
         )
         self.task_name    = '{0} news'.format(self.domain)
         self.css_elements = '#content .post .inner h4 a'

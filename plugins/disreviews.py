@@ -91,8 +91,7 @@ class DISReviews (TwoStep):
             'drownedinsound.com',
             '/releases/reviewed?page={0}',
             output     = output,
-            csv_header = csv_header,
-            encoding   = 'utf-8'
+            csv_header = csv_header
         )
         self.task_name    = '{0} reviews'.format(self.domain)
         self.css_elements = '.content .review .inner h4 a'
