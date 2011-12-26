@@ -122,7 +122,7 @@ class Generic (object):
                 self.parse_page,
                 chain.from_iterable(self.global_pool.imap_unordered(
                     self.handle_page_unit,
-                    self.get_progress(right_bound = 15)
+                    self.get_progress()
                 ))
             ))
         )
@@ -141,7 +141,6 @@ class Generic (object):
                     url,
                     parser(self.get_page_content(url))
                 )
-                break
             except ValueError: # if self.get_page_content returns None and parser dies
                 pass
             except (HTTP404, IndexError): # IndexError raised by lxml.etree in order if parsing was unsuccessful
