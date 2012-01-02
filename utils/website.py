@@ -29,13 +29,14 @@ import multiprocessing
 
 from lxml.html   import document_fromstring as parser, tostring as parser_str
 from urlparse    import urlunsplit
-from itertools   import imap, chain
+from itertools   import ifilter, imap, chain
 from sys         import stderr, exit
 from csv         import writer as csvwriter
 from abc         import abstractmethod, ABCMeta as Abstract
 from os          import extsep
 from gevent.pool import Pool
 from chardet     import detect as charset_detect
+from collections import deque
 
 from .          import pagecounter
 from .papercuts import urlopen, HTTP404
@@ -105,7 +106,6 @@ class Generic (object):
 
 
     def handle_page_unit (self, unit):
-        parse_results = None
         for attempt in xrange(self.tries):
             parse_results = self.parse_linkpage(unit)
             if parse_results is not None:
@@ -116,17 +116,19 @@ class Generic (object):
 
 
     def handle (self):
-        content = filter(
-            None,
-            chain.from_iterable(self.element_pool.imap_unordered(
-                self.parse_page,
-                chain.from_iterable(self.global_pool.imap_unordered(
-                    self.handle_page_unit,
-                    self.get_progress()
-                ))
-            ))
+        results = deque()
+
+        elements = chain.from_iterable(self.global_pool.imap_unordered(
+            self.handle_page_unit,
+            self.get_progress(right_bound = 3)
+        ))
+
+        self.element_pool.map(
+            lambda url: self.parse_page(url, results),
+            elements
         )
-        content.sort(key = self.get_sorter)
+
+        content = sorted(filter(None, results), key = self.get_sorter)
 
         if self.csv_header is not None:
             content.insert(0, self.csv_header)
@@ -134,13 +136,13 @@ class Generic (object):
         self.save(content)
 
 
-    def parse_page (self, url):
+    def parse_page (self, url, results):
         for attempt in xrange(self.tries):
             try:
-                return self.start_parse_page(
+                results.append(self.start_parse_page(
                     url,
                     parser(self.get_page_content(url))
-                )
+                ))
             except ValueError: # if self.get_page_content returns None and parser dies
                 pass
             except (HTTP404, IndexError): # IndexError raised by lxml.etree in order if parsing was unsuccessful
